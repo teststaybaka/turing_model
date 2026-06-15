@@ -28,7 +28,7 @@ elif MODEL_TYPE == "stair":
 MICRO_BATCH_SIZE = 32       # fits in GPU memory — adjust per hardware
 GRAD_ACCUM_STEPS = 4        # effective batch = 32 * 4 = 128 examples
 EVAL_INTERVAL = 50          # eval every N optimizer steps
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+DEVICE = "cuda"
 
 max_lr = 3e-4
 min_lr = max_lr * 0.1
@@ -145,6 +145,11 @@ def evaluate(model, loader, chunk_size):
 
 
 def train():
+    torch.manual_seed(42)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(42)
+    torch.set_float32_matmul_precision('high')
+
     train_dataset = CopyTaskDataset(TRAIN_STRINGS)
     val_dataset = CopyTaskDataset(VAL_STRINGS)
     test_dataset = CopyTaskDataset(TEST_LONG_STRINGS)
@@ -156,6 +161,7 @@ def train():
     total_steps = len(train_loader) // GRAD_ACCUM_STEPS
 
     model = GPT(config).to(DEVICE)
+    model = torch.compile(model)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"Model: {n_params:,} parameters")
     print(f"Config: {config}")
