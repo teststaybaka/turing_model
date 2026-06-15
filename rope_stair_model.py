@@ -67,34 +67,28 @@ class StairAttention(nn.Module):
         self.n_heads = config.n_heads
         self.n_embd = config.n_embd
         self.window_size = config.block_size
-        # BlockMask cache keyed by (T_new, T_low, T_high_total, device). Only a
-        # couple of distinct shapes occur (warmup vs steady state at training).
-        self._block_mask_cache = {}
+        self._warmup_block_mask = None
+        self._steady_block_mask = None
 
-    def _get_block_mask(self, T_new, T_low, T_high_total, device):
-        key = (T_new, T_low, T_high_total, str(device))
-        cached = self._block_mask_cache.get(key)
-        if cached is not None:
-            return cached
+    def precompute_block_masks(self, device):
         W = self.window_size
         half_W = W // 2
-        def mask_mod(b, h, q_idx, kv_idx):
-            # K_combined layout: [K_high (T_high_total) | K_low+live (T_low + T_new)].
-            # K_high column j -> chunk-relative position -T_high_total + j (all negative).
-            # K_low  column j -> chunk-relative position -T_low + (j - T_high_total).
-            is_high = kv_idx < T_high_total
-            high_dist = q_idx - (kv_idx - T_high_total)
-            low_dist = q_idx - (kv_idx - T_high_total - T_low)
-            high_ok = (high_dist >= half_W) & (high_dist < W)
-            low_ok = (low_dist >= 0) & (low_dist < half_W)
-            return torch.where(is_high, high_ok, low_ok)
-        block_mask = create_block_mask(
-            mask_mod, B=None, H=None,
-            Q_LEN=T_new, KV_LEN=T_high_total + T_low + T_new,
-            device=device,
-        )
-        self._block_mask_cache[key] = block_mask
-        return block_mask
+        T_new = half_W
+        T_low = half_W
+        for T_high_total, attr in [(half_W, '_warmup_block_mask'),
+                                   (W, '_steady_block_mask')]:
+            def mask_mod(b, h, q_idx, kv_idx, _tht=T_high_total):
+                is_high = kv_idx < _tht
+                high_dist = q_idx - (kv_idx - _tht)
+                low_dist = q_idx - (kv_idx - _tht - T_low)
+                high_ok = (high_dist >= half_W) & (high_dist < W)
+                low_ok = (low_dist >= 0) & (low_dist < half_W)
+                return torch.where(is_high, high_ok, low_ok)
+            setattr(self, attr, create_block_mask(
+                mask_mod, B=None, H=None,
+                Q_LEN=T_new, KV_LEN=T_high_total + T_low + T_new,
+                device=device,
+            ))
 
     def forward(self, x, cos, sin, cache=None):
         """
@@ -154,7 +148,7 @@ class StairAttention(nn.Module):
         ])
         k_rot = _apply_rope(K_combined, cos[pos], sin[pos])
 
-        block_mask = self._get_block_mask(T_new, T_low, T_high_total, q.device)
+        block_mask = self._warmup_block_mask if high_old is None else self._steady_block_mask
         y = flex_attention(q_rot, k_rot, V_combined, block_mask=block_mask)
         return self._merge_heads(y, B, T_new, C), (k, v)
 
@@ -239,6 +233,10 @@ class GPT(nn.Module):
                 nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
+
+    def precompute_block_masks(self, device):
+        for block in self.h:
+            block.attn.precompute_block_masks(device)
 
     def forward(self, idx, kv_caches=None):
         """

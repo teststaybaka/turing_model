@@ -162,6 +162,7 @@ def train():
     total_steps = len(train_loader) // GRAD_ACCUM_STEPS
 
     model = GPT(config).to(DEVICE)
+    model.precompute_block_masks(DEVICE)
     model = torch.compile(model)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"Model: {n_params:,} parameters")
