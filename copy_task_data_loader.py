@@ -106,9 +106,10 @@ class CopyTaskDataset:
 
 
 class CopyTaskDataLoader:
-    def __init__(self, dataset, batch_size, shuffle=True, seed=42):
+    def __init__(self, dataset, batch_size, chunk_size, shuffle=True, seed=42):
         self.dataset = dataset
         self.batch_size = batch_size
+        self.chunk_size = chunk_size
         self.shuffle = shuffle
         self.rng = random.Random(seed)
 
@@ -122,7 +123,10 @@ class CopyTaskDataLoader:
             yield self._collate(batch)
 
     def _collate(self, batch):
-        max_len = max(len(tokens) for tokens in batch)
+        # Round up to multiple of chunk_size so every chunk the compiled
+        # model sees is exactly chunk_size tokens — avoids recompilation.
+        seq_len = max(len(tokens) - 1 for tokens in batch)
+        padded_len = ((seq_len + self.chunk_size - 1) // self.chunk_size) * self.chunk_size
         input_ids = []
         target_ids = []
         loss_mask = []
@@ -130,7 +134,7 @@ class CopyTaskDataLoader:
             inp = tokens[:-1]
             tgt = tokens[1:]
             mask = [1 if t in ACTION_TOKENS else 0 for t in tgt]
-            pad_len = (max_len - 1) - len(inp)
+            pad_len = padded_len - len(inp)
             input_ids.append(inp + [PAD] * pad_len)
             target_ids.append(tgt + [PAD] * pad_len)
             loss_mask.append(mask + [0] * pad_len)
@@ -154,7 +158,7 @@ if __name__ == "__main__":
 
     # Test data loader
     dataset = CopyTaskDataset(TRAIN_STRINGS[:100])
-    loader = CopyTaskDataLoader(dataset, batch_size=4)
+    loader = CopyTaskDataLoader(dataset, batch_size=4, chunk_size=32)
     batch = next(iter(loader))
     input_ids, target_ids, loss_mask = batch
     print(f"Batch shapes: input={input_ids.shape}, target={target_ids.shape}, mask={loss_mask.shape}")

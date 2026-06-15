@@ -150,14 +150,15 @@ def train():
         torch.cuda.manual_seed(42)
     torch.set_float32_matmul_precision('high')
 
+    chunk_size = config.block_size // 2 if MODEL_TYPE == "stair" else config.block_size
+
     train_dataset = CopyTaskDataset(TRAIN_STRINGS)
     val_dataset = CopyTaskDataset(VAL_STRINGS)
     test_dataset = CopyTaskDataset(TEST_LONG_STRINGS)
-    train_loader = CopyTaskDataLoader(train_dataset, batch_size=MICRO_BATCH_SIZE, shuffle=True)
-    val_loader = CopyTaskDataLoader(val_dataset, batch_size=MICRO_BATCH_SIZE, shuffle=False)
-    test_loader = CopyTaskDataLoader(test_dataset, batch_size=MICRO_BATCH_SIZE, shuffle=False)
+    train_loader = CopyTaskDataLoader(train_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=True)
+    val_loader = CopyTaskDataLoader(val_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=False)
+    test_loader = CopyTaskDataLoader(test_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=False)
 
-    chunk_size = config.block_size // 2 if MODEL_TYPE == "stair" else config.block_size
     total_steps = len(train_loader) // GRAD_ACCUM_STEPS
 
     model = GPT(config).to(DEVICE)
