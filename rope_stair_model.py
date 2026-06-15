@@ -240,16 +240,16 @@ class GPT(nn.Module):
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, idx, caches=None):
+    def forward(self, idx, kv_caches=None):
         """
         idx: (B, T_new) — this chunk's new token ids. T_new must be <= block_size/2.
-        caches: list of n_layers entries, each a tuple (low_new, high_old, high_new),
-                same structure and shift rule as stair_model (see its docstring).
-                K entries are UNROTATED. Pass None (whole list) for the first chunk of
-                a shard; reset to None at each optimizer step boundary.
+        kv_caches: list of n_layers entries, each a tuple (low_new, high_old, high_new),
+                   same structure and shift rule as stair_model (see its docstring).
+                   K entries are UNROTATED. Pass None (whole list) for the first chunk of
+                   a shard; reset to None at each optimizer step boundary.
         Returns:
           logits: (B, T_new, vocab_size) — logits[i] predicts idx[i+1]
-          new_caches: list of n_layers (low_new, high_old, high_new) for the next call.
+          new_kv_caches: list of n_layers (low_new, high_old, high_new) for the next call.
         """
         B, T_new = idx.size()
         W = self.config.block_size
@@ -259,7 +259,7 @@ class GPT(nn.Module):
 
         computed_kv = []
         for layer_idx, block in enumerate(self.h):
-            layer_cache = None if caches is None else caches[layer_idx]
+            layer_cache = None if kv_caches is None else kv_caches[layer_idx]
             x, (k_new, v_new) = block(x, self.rope_cos, self.rope_sin, cache=layer_cache)
             computed_kv.append((k_new, v_new))
 
@@ -268,7 +268,7 @@ class GPT(nn.Module):
         x_out = self.ln_f(x)
         logits = self.lm_head(x_out)
 
-        new_caches = []
+        new_kv_caches = []
         n_layers = len(self.h)
         for layer_idx in range(n_layers):
             k_l, v_l = computed_kv[layer_idx]
@@ -279,12 +279,12 @@ class GPT(nn.Module):
 
             next_low_new = (k_l, v_l)
             next_high_new = (k_above, v_above)
-            if caches is None:
+            if kv_caches is None:
                 next_high_old = None
             else:
-                _, _, prev_high_new = caches[layer_idx]
+                _, _, prev_high_new = kv_caches[layer_idx]
                 next_high_old = prev_high_new
 
-            new_caches.append((next_low_new, next_high_old, next_high_new))
+            new_kv_caches.append((next_low_new, next_high_old, next_high_new))
 
-        return logits, new_caches
+        return logits, new_kv_caches

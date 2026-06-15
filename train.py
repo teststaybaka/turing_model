@@ -16,7 +16,13 @@ from copy_task_data_loader import (
     CopyTaskDataset, CopyTaskDataLoader,
     TRAIN_STRINGS, VAL_STRINGS, TEST_LONG_STRINGS, VOCAB_SIZE,
 )
-from rope_sliding_cache_model import GPT, GPTConfig
+# Toggle model: "sliding" or "stair"
+MODEL_TYPE = "sliding"
+
+if MODEL_TYPE == "sliding":
+    from rope_sliding_cache_model import GPT, GPTConfig
+elif MODEL_TYPE == "stair":
+    from rope_stair_model import GPT, GPTConfig
 
 # --- Hyperparameters ---
 MICRO_BATCH_SIZE = 32       # fits in GPU memory — adjust per hardware
@@ -146,7 +152,7 @@ def train():
     val_loader = CopyTaskDataLoader(val_dataset, batch_size=MICRO_BATCH_SIZE, shuffle=False)
     test_loader = CopyTaskDataLoader(test_dataset, batch_size=MICRO_BATCH_SIZE, shuffle=False)
 
-    chunk_size = config.block_size
+    chunk_size = config.block_size // 2 if MODEL_TYPE == "stair" else config.block_size
     total_steps = len(train_loader) // GRAD_ACCUM_STEPS
 
     model = GPT(config).to(DEVICE)
