@@ -78,7 +78,6 @@ class StairAttention(nn.Module):
         for T_high_total, attr in [(half_W, '_warmup_block_mask'),
                                    (W, '_steady_block_mask')]:
             kv_len = T_high_total + T_low + T_new
-            print(f"[Precompute] {attr}: T_new={T_new} T_low={T_low} T_high_total={T_high_total} KV_LEN={kv_len}")
             def mask_mod(b, h, q_idx, kv_idx, _tht=T_high_total):
                 is_high = kv_idx < _tht
                 high_dist = q_idx - (kv_idx - _tht)
@@ -119,7 +118,6 @@ class StairAttention(nn.Module):
         q_rot = _apply_rope(q, cos[W:W + T_new], sin[W:W + T_new])
 
         if cache is None:
-            print(f"[StairAttn] cache=None  T_new={T_new} W={W}")
             k_rot = _apply_rope(k, cos[W:W + T_new], sin[W:W + T_new])
             y = F.scaled_dot_product_attention(q_rot, k_rot, v, is_causal=True)
             return self._merge_heads(y, B, T_new, C), (k, v)
@@ -137,9 +135,6 @@ class StairAttention(nn.Module):
             K_combined = torch.cat([K_high_old, K_high_new, K_low, k], dim=2)
             V_combined = torch.cat([V_high_old, V_high_new, V_low, v], dim=2)
         T_high_total = K_combined.size(2) - T_low - T_new
-
-        branch = "warmup" if high_old is None else "steady"
-        print(f"[StairAttn] {branch}  T_new={T_new} T_low={T_low} T_high_total={T_high_total} KV_LEN={K_combined.size(2)}")
 
         pos = torch.cat([
             torch.arange(W - T_high_total, W, device=q.device),

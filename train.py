@@ -17,7 +17,7 @@ from copy_task_data_loader import (
     TRAIN_STRINGS, VAL_STRINGS, TEST_LONG_STRINGS, VOCAB_SIZE,
 )
 # Toggle model: "sliding" or "stair"
-MODEL_TYPE = "sliding"
+MODEL_TYPE = "stair"
 
 if MODEL_TYPE == "sliding":
     from rope_sliding_cache_model import GPT, GPTConfig
@@ -90,9 +90,9 @@ def forward_chunked(model, input_ids, target_ids, loss_mask, chunk_size):
 
     for start in range(0, T, chunk_size):
         end = min(start + chunk_size, T)
-        chunk_inp = input_ids[:, start:end]
-        chunk_tgt = target_ids[:, start:end]
-        chunk_mask = loss_mask[:, start:end]
+        chunk_inp = input_ids[:, start:end].contiguous()
+        chunk_tgt = target_ids[:, start:end].contiguous()
+        chunk_mask = loss_mask[:, start:end].contiguous()
 
         logits, kv_caches = model(chunk_inp, kv_caches=kv_caches)
 
@@ -112,35 +112,35 @@ def evaluate(model, loader, chunk_size):
     correct_actions = 0
     total_actions = 0
     with torch.no_grad():
-        for input_ids, target_ids, loss_mask in loader:
-            input_ids = input_ids.to(DEVICE)
-            target_ids = target_ids.to(DEVICE)
-            loss_mask = loss_mask.to(DEVICE)
+        with torch.autocast(device_type=DEVICE, dtype=torch.bfloat16, enabled=(DEVICE == "cuda")):
+            for input_ids, target_ids, loss_mask in loader:
+                input_ids = input_ids.to(DEVICE)
+                target_ids = target_ids.to(DEVICE)
+                loss_mask = loss_mask.to(DEVICE)
 
-            B, T = input_ids.size()
-            kv_caches = None
-            all_logits = []
+                B, T = input_ids.size()
+                kv_caches = None
+                all_logits = []
 
-            for start in range(0, T, chunk_size):
-                end = min(start + chunk_size, T)
-                logits, kv_caches = model(input_ids[:, start:end], kv_caches=kv_caches)
-                all_logits.append(logits)
+                for start in range(0, T, chunk_size):
+                    end = min(start + chunk_size, T)
+                    chunk = input_ids[:, start:end].contiguous()
+                    logits, kv_caches = model(chunk, kv_caches=kv_caches)
+                    all_logits.append(logits)
 
-            all_logits = torch.cat(all_logits, dim=1)
-            loss_per_token = F.cross_entropy(
-                all_logits.reshape(-1, all_logits.size(-1)),
-                target_ids.reshape(-1),
-                reduction='none',
-            ).view_as(target_ids)
+                all_logits = torch.cat(all_logits, dim=1)
+                loss_per_token = F.cross_entropy(
+                    all_logits.reshape(-1, all_logits.size(-1)),
+                    target_ids.reshape(-1),
+                    reduction='none',
+                ).view_as(target_ids)
 
-            total_loss += (loss_per_token * loss_mask).sum().item()
-            total_tokens += loss_mask.sum().item()
+                total_loss += (loss_per_token * loss_mask).sum().item()
+                total_tokens += loss_mask.sum().item()
 
-            preds = all_logits.argmax(dim=-1)
-            correct_actions += ((preds == target_ids) * loss_mask).sum().item()
-            total_actions += loss_mask.sum().item()
-
-    model.train()
+                preds = all_logits.argmax(dim=-1)
+                correct_actions += ((preds == target_ids) * loss_mask).sum().item()
+                total_actions += loss_mask.sum().item()
     return total_loss / total_tokens, correct_actions / total_actions
 
 
@@ -179,18 +179,23 @@ def train():
     with open(log_file, "w") as f:
         pass
 
-    model.train()
-    t0 = time.time()
     batch_iter = iter(train_loader)
-
     for step in range(total_steps):
+        if step % EVAL_INTERVAL == 0:
+            val_loss, val_acc = evaluate(model, val_loader, chunk_size)
+            print(f"step {step:4d}/{total_steps} | val_loss {val_loss:.4f} | val_acc {val_acc:.4f}")
+            with open(log_file, "a") as f:
+                f.write(f"{step} val {val_loss:.4f} acc {val_acc:.4f}\n")
+
         lr = get_lr(step, total_steps)
         for pg in optimizer.param_groups:
             pg['lr'] = lr
 
+        model.train()
         optimizer.zero_grad()
         loss_accum = 0.0
 
+        t0 = time.time()
         for micro_step in range(GRAD_ACCUM_STEPS):
             input_ids, target_ids, loss_mask = next(batch_iter)
             input_ids = input_ids.to(DEVICE)
@@ -206,20 +211,17 @@ def train():
 
         norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
-
-        if step % EVAL_INTERVAL == 0 or step == total_steps - 1:
-            dt = time.time() - t0
-            val_loss, val_acc = evaluate(model, val_loader, chunk_size)
-            print(f"step {step:4d}/{total_steps} | lr {lr:.2e} | loss {loss_accum:.4f} | val_loss {val_loss:.4f} | val_acc {val_acc:.4f} | norm {norm:.4f} | {dt:.2f}s")
-            with open(log_file, "a") as f:
-                f.write(f"{step} loss {loss_accum:.4f} val {val_loss:.4f} acc {val_acc:.4f}\n")
-            t0 = time.time()
+        dt = time.time() - t0
+        print(f"step {step + 1:4d}/{total_steps} | loss {loss_accum:.4f} | norm {norm:.4f} | lr {dt:.2f}s")
 
     # Final evaluation
     val_loss, val_acc = evaluate(model, val_loader, chunk_size)
     test_loss, test_acc = evaluate(model, test_loader, chunk_size)
     print(f"\nVal:         loss {val_loss:.4f} | acc {val_acc:.4f}")
     print(f"Test (long): loss {test_loss:.4f} | acc {test_acc:.4f}")
+    with open(log_file, "a") as f:
+        f.write(f"final val {val_loss:.4f} acc {val_acc:.4f}\n")
+        f.write(f"final test {test_loss:.4f} acc {test_acc:.4f}\n")
 
     torch.save({
         'model': model.state_dict(),

@@ -138,6 +138,14 @@ class CopyTaskDataLoader:
             input_ids.append(inp + [PAD] * pad_len)
             target_ids.append(tgt + [PAD] * pad_len)
             loss_mask.append(mask + [0] * pad_len)
+
+        # Pad the BATCH dimension up to batch_size so the compiled model always
+        # sees exactly batch_size rows — pad rows get an all-zero loss mask.
+        while len(input_ids) < self.batch_size:
+            input_ids.append([PAD] * padded_len)
+            target_ids.append([PAD] * padded_len)
+            loss_mask.append([0] * padded_len)
+
         return (
             torch.tensor(input_ids, dtype=torch.long),
             torch.tensor(target_ids, dtype=torch.long),
