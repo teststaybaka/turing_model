@@ -1,5 +1,5 @@
 """
-Training script for the Turing machine copy task.
+Training script for the Turing machine tape tasks (copy / reverse / mirror).
 
 Single pass through training data (no epochs), step-based like FineWeb pretraining.
 Uses masked cross-entropy on action tokens only.
@@ -12,8 +12,8 @@ import time
 import math
 import torch
 import torch.nn.functional as F
-from copy_task_data_loader import (
-    CopyTaskDataset, CopyTaskDataLoader,
+from tape_tasks_data_loader import (
+    TapeTaskDataset, TapeTaskDataLoader,
     TRAIN_STRINGS, VAL_STRINGS, TEST_LONG_STRINGS, VOCAB_SIZE,
 )
 # Toggle model: "sliding" or "stair"
@@ -152,12 +152,12 @@ def train():
 
     chunk_size = config.block_size // 2 if MODEL_TYPE == "stair" else config.block_size
 
-    train_dataset = CopyTaskDataset(TRAIN_STRINGS)
-    val_dataset = CopyTaskDataset(VAL_STRINGS)
-    test_dataset = CopyTaskDataset(TEST_LONG_STRINGS)
-    train_loader = CopyTaskDataLoader(train_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=True)
-    val_loader = CopyTaskDataLoader(val_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=False)
-    test_loader = CopyTaskDataLoader(test_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=False)
+    train_dataset = TapeTaskDataset(TRAIN_STRINGS)
+    val_dataset = TapeTaskDataset(VAL_STRINGS)
+    test_dataset = TapeTaskDataset(TEST_LONG_STRINGS)
+    train_loader = TapeTaskDataLoader(train_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=True)
+    val_loader = TapeTaskDataLoader(val_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=False)
+    test_loader = TapeTaskDataLoader(test_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=False)
 
     total_steps = len(train_loader) // GRAD_ACCUM_STEPS
 
@@ -226,8 +226,8 @@ def train():
     torch.save({
         'model': model.state_dict(),
         'config': config,
-    }, "copy_task_model.pt")
-    print("Saved model to copy_task_model.pt")
+    }, "log/tape_tasks_model.pt")
+    print("Saved model to log/tape_tasks_model.pt")
 
 
 if __name__ == "__main__":
