@@ -17,7 +17,7 @@ from copy_task_data_loader import (
     TRAIN_STRINGS, VAL_STRINGS, TEST_LONG_STRINGS, VOCAB_SIZE,
 )
 # Toggle model: "sliding" or "stair"
-MODEL_TYPE = "stair"
+MODEL_TYPE = "sliding"
 
 if MODEL_TYPE == "sliding":
     from rope_sliding_cache_model import GPT, GPTConfig

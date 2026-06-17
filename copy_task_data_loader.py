@@ -89,9 +89,9 @@ def _generate_fixed_strings(n_examples, min_len, max_len, seed=42):
     return strings
 
 
-TRAIN_STRINGS = _generate_fixed_strings(n_examples=10000, min_len=4, max_len=32, seed=42)
-VAL_STRINGS = _generate_fixed_strings(n_examples=200, min_len=4, max_len=32, seed=123)
-TEST_LONG_STRINGS = _generate_fixed_strings(n_examples=200, min_len=48, max_len=64, seed=456)
+TRAIN_STRINGS = _generate_fixed_strings(n_examples=100000, min_len=4, max_len=32, seed=42)
+VAL_STRINGS = _generate_fixed_strings(n_examples=2000, min_len=4, max_len=32, seed=123)
+TEST_LONG_STRINGS = _generate_fixed_strings(n_examples=2000, min_len=48, max_len=64, seed=456)
 
 
 class CopyTaskDataset:
