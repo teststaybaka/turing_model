@@ -130,7 +130,7 @@ TASKS = {
     "reverse": generate_reverse,
     "mirror": generate_mirror,
 }
-DEFAULT_TASKS = ("copy", "reverse", "mirror")
+DEFAULT_TASKS = ["copy", "reverse", "mirror"]
 
 
 # --- Fixed dataset for reproducibility ---

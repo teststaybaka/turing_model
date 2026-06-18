@@ -162,7 +162,6 @@ def train():
     total_steps = len(train_loader) // GRAD_ACCUM_STEPS
 
     model = GPT(config).to(DEVICE)
-    model.precompute_block_masks(DEVICE)
     model = torch.compile(model)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"Model: {n_params:,} parameters")
@@ -207,12 +206,12 @@ def train():
 
             loss = loss / GRAD_ACCUM_STEPS
             loss.backward()
-            loss_accum += loss.item()
+            loss_accum += loss.detach()
 
         norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
         dt = time.time() - t0
-        print(f"step {step + 1:4d}/{total_steps} | loss {loss_accum:.4f} | norm {norm:.4f} | lr {dt:.2f}s")
+        print(f"step {step + 1:4d}/{total_steps} | loss {loss_accum:.4f} | norm {norm:.4f} | lr {lr:.2e} | dt {dt:.2f}s")
 
     # Final evaluation
     val_loss, val_acc = evaluate(model, val_loader, chunk_size)

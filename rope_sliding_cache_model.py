@@ -62,20 +62,28 @@ class CausalSelfAttention(nn.Module):
     self.n_embd = config.n_embd
     # sliding-window size in tokens; also the size of the KV cache.
     self.window_size = config.block_size
-    self._block_mask = None
+    # BlockMask cache keyed by (T_new, T_cache, device). Training sees one steady-state
+    # shape; eval tail chunks add a few more.
+    self._block_mask_cache = {}
 
-  def precompute_block_masks(self, device):
+  def _get_block_mask(self, T_new, T_cache, device):
+    key = (T_new, T_cache, str(device))
+    cached = self._block_mask_cache.get(key)
+    if cached is not None:
+      return cached
     W = self.window_size
-    T_new = W
-    T_cache = W
     def mask_mod(b, h, q_idx, kv_idx):
+      # K_all layout: [K_cache (T_cache) | k_live (T_new)]. Query at intra-chunk
+      # index q sits at K_all index q + T_cache; it attends to the last W keys.
       dist = q_idx + T_cache - kv_idx
       return (dist >= 0) & (dist < W)
-    self._block_mask = create_block_mask(
+    block_mask = create_block_mask(
         mask_mod, B=None, H=None,
         Q_LEN=T_new, KV_LEN=T_cache + T_new,
         device=device,
     )
+    self._block_mask_cache[key] = block_mask
+    return block_mask
 
   def forward(self, x, cos, sin, kv_cache=None):
     """
@@ -121,7 +129,8 @@ class CausalSelfAttention(nn.Module):
       # Sliding-window mask, same rule as sliding_cache_model: query at intra-chunk
       # index q_i attends to K_all indices [q_i + T_cache - W + 1, q_i + T_cache].
       # FlexAttention block mask skips the ~half of K_all outside each query's window.
-      y = flex_attention(q_rot, k_rot, V_all, block_mask=self._block_mask)
+      block_mask = self._get_block_mask(T_new, T_cache, q.device)
+      y = flex_attention(q_rot, k_rot, V_all, block_mask=block_mask)
 
     y = y.transpose(1, 2).contiguous().view(B, T_new, C) # re-assemble heads
     y = self.c_proj(y)
@@ -183,10 +192,6 @@ class GPT(nn.Module):
         nn.init.zeros_(module.bias)
     elif isinstance(module, nn.Embedding):
       nn.init.normal_(module.weight, mean=0.0, std=0.02)
-
-  def precompute_block_masks(self, device):
-    for block in self.transformer.h:
-      block.attn.precompute_block_masks(device)
 
   def forward(self, idx, kv_caches=None):
     """
