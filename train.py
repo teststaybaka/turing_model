@@ -162,6 +162,7 @@ def train():
     total_steps = len(train_loader) // GRAD_ACCUM_STEPS
 
     model = GPT(config).to(DEVICE)
+    raw_model = model
     model = torch.compile(model)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"Model: {n_params:,} parameters")
@@ -181,7 +182,7 @@ def train():
     batch_iter = iter(train_loader)
     for step in range(total_steps):
         if step % EVAL_INTERVAL == 0:
-            val_loss, val_acc = evaluate(model, val_loader, chunk_size)
+            val_loss, val_acc = evaluate(raw_model, val_loader, chunk_size)
             print(f"step {step:4d}/{total_steps} | val_loss {val_loss:.4f} | val_acc {val_acc:.4f}")
             with open(log_file, "a") as f:
                 f.write(f"{step} val {val_loss:.4f} acc {val_acc:.4f}\n")
@@ -214,16 +215,18 @@ def train():
         print(f"step {step + 1:4d}/{total_steps} | loss {loss_accum:.4f} | norm {norm:.4f} | lr {lr:.2e} | dt {dt:.2f}s")
 
     # Final evaluation
-    val_loss, val_acc = evaluate(model, val_loader, chunk_size)
-    test_loss, test_acc = evaluate(model, test_loader, chunk_size)
+    val_loss, val_acc = evaluate(raw_model, val_loader, chunk_size)
+    test_loss, test_acc = evaluate(raw_model, test_loader, chunk_size)
     print(f"\nVal:         loss {val_loss:.4f} | acc {val_acc:.4f}")
     print(f"Test (long): loss {test_loss:.4f} | acc {test_acc:.4f}")
     with open(log_file, "a") as f:
         f.write(f"final val {val_loss:.4f} acc {val_acc:.4f}\n")
         f.write(f"final test {test_loss:.4f} acc {test_acc:.4f}\n")
 
+    # Save the uncompiled module's weights so the checkpoint has clean keys
+    # (no torch.compile "_orig_mod." prefix) and loads into a plain GPT.
     torch.save({
-        'model': model.state_dict(),
+        'model': raw_model.state_dict(),
         'config': config,
     }, "log/tape_tasks_model.pt")
     print("Saved model to log/tape_tasks_model.pt")
