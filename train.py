@@ -1,8 +1,9 @@
 """
-Training script for the Turing machine tape tasks (copy / reverse / mirror).
+Training script for the Turing machine memory tasks (recall / copy / mirror / repeat).
 
 Single pass through training data (no epochs), step-based like FineWeb pretraining.
-Uses masked cross-entropy on action tokens only.
+Uses masked cross-entropy on graded tokens only (recall: the recall WRITEs;
+deferred branch: all action tokens).
 Sequences split into chunks with KV cache carry and BPTT.
 Gradient accumulation: effective_batch = micro_batch_size * grad_accum_steps.
 """
@@ -12,9 +13,10 @@ import time
 import math
 import torch
 import torch.nn.functional as F
-from tape_tasks_data_loader import (
+from memory_tasks_data_loader import (
     TapeTaskDataset, TapeTaskDataLoader,
-    TRAIN_STRINGS, VAL_STRINGS, TEST_LONG_STRINGS, VOCAB_SIZE,
+    TRAIN_STRINGS, VAL_STRINGS, TEST_LONG_STRINGS,
+    TRAIN_RECALL, VAL_RECALL, TEST_LONG_RECALL, VOCAB_SIZE,
 )
 # Toggle model: "sliding" or "stair"
 MODEL_TYPE = "sliding"
@@ -152,9 +154,9 @@ def train():
 
     chunk_size = config.block_size // 2 if MODEL_TYPE == "stair" else config.block_size
 
-    train_dataset = TapeTaskDataset(TRAIN_STRINGS)
-    val_dataset = TapeTaskDataset(VAL_STRINGS)
-    test_dataset = TapeTaskDataset(TEST_LONG_STRINGS)
+    train_dataset = TapeTaskDataset(TRAIN_STRINGS, TRAIN_RECALL)
+    val_dataset = TapeTaskDataset(VAL_STRINGS, VAL_RECALL)
+    test_dataset = TapeTaskDataset(TEST_LONG_STRINGS, TEST_LONG_RECALL)
     train_loader = TapeTaskDataLoader(train_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=True)
     val_loader = TapeTaskDataLoader(val_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=False)
     test_loader = TapeTaskDataLoader(test_dataset, batch_size=MICRO_BATCH_SIZE, chunk_size=chunk_size, shuffle=False)
