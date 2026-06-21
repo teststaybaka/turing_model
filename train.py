@@ -18,13 +18,15 @@ from memory_tasks_data_loader import (
     TRAIN_STRINGS, VAL_STRINGS, TEST_LONG_STRINGS,
     TRAIN_RECALL, VAL_RECALL, TEST_LONG_RECALL, VOCAB_SIZE,
 )
-# Toggle model: "sliding", "stair", or "mamba3"
-MODEL_TYPE = "mamba3"
+# Toggle model: "sliding", "stair", "hybrid", or "mamba3"
+MODEL_TYPE = "hybrid"
 
 if MODEL_TYPE == "sliding":
     from rope_sliding_cache_model import GPT, GPTConfig
 elif MODEL_TYPE == "stair":
     from rope_stair_model import GPT, GPTConfig
+elif MODEL_TYPE == "hybrid":
+    from rope_hybrid_stair_model import GPT, GPTConfig
 elif MODEL_TYPE == "mamba3":
     from mamba3_model import GPT, GPTConfig
 
@@ -154,7 +156,7 @@ def train():
         torch.cuda.manual_seed(42)
     torch.set_float32_matmul_precision('high')
 
-    chunk_size = config.block_size // 2 if MODEL_TYPE == "stair" else config.block_size
+    chunk_size = config.block_size // 2 if MODEL_TYPE in ("stair", "hybrid") else config.block_size
 
     train_dataset = TapeTaskDataset(TRAIN_STRINGS, TRAIN_RECALL)
     val_dataset = TapeTaskDataset(VAL_STRINGS, VAL_RECALL)
