@@ -18,27 +18,19 @@ from memory_tasks_data_loader import (
     TRAIN_STRINGS, VAL_STRINGS, TEST_LONG_STRINGS,
     TRAIN_RECALL, VAL_RECALL, TEST_LONG_RECALL, VOCAB_SIZE,
 )
-# Toggle model: "sliding", "stair", "mamba3", "mamba2",
-# or the single-feature ablations "mamba3_norot" / "mamba3_noterap".
+# Toggle model: "sliding", "stair", or "mamba3"
 MODEL_TYPE = "mamba3"
-
-_MAMBA_FLAGS = {  # (use_rotation, use_trapezoid) for the mamba3_model.py family
-    "mamba3":         (True,  True),    # full Mamba-3
-    "mamba2":         (False, False),   # Euler + real SSM = Mamba-2 baseline
-    "mamba3_norot":   (False, True),    # ablate complex/rotational state
-    "mamba3_noterap": (True,  False),   # ablate exponential-trapezoidal discretization
-}
 
 if MODEL_TYPE == "sliding":
     from rope_sliding_cache_model import GPT, GPTConfig
 elif MODEL_TYPE == "stair":
     from rope_stair_model import GPT, GPTConfig
-elif MODEL_TYPE in _MAMBA_FLAGS:
+elif MODEL_TYPE == "mamba3":
     from mamba3_model import GPT, GPTConfig
 
 # --- Hyperparameters ---
-MICRO_BATCH_SIZE = 32       # fits in GPU memory — adjust per hardware
-GRAD_ACCUM_STEPS = 4        # effective batch = 32 * 4 = 128 examples
+MICRO_BATCH_SIZE = 128       # fits in GPU memory — adjust per hardware
+GRAD_ACCUM_STEPS = 1        # effective batch 128 examples
 EVAL_INTERVAL = 50          # eval every N optimizer steps
 DEVICE = "cuda"
 
@@ -46,17 +38,13 @@ max_lr = 3e-4
 min_lr = max_lr * 0.1
 warmup_steps = 30
 
-_config_kwargs = dict(
+config = GPTConfig(
     block_size=32,
     vocab_size=VOCAB_SIZE,
     n_layers=4,
     n_heads=4,
     n_embd=64,
 )
-if MODEL_TYPE in _MAMBA_FLAGS:
-    use_rotation, use_trapezoid = _MAMBA_FLAGS[MODEL_TYPE]
-    _config_kwargs.update(use_rotation=use_rotation, use_trapezoid=use_trapezoid)
-config = GPTConfig(**_config_kwargs)
 
 log_dir = "log"
 os.makedirs(log_dir, exist_ok=True)
