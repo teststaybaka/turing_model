@@ -18,13 +18,15 @@ from memory_tasks_data_loader import (
     TRAIN_STRINGS, VAL_STRINGS, TEST_LONG_STRINGS,
     TRAIN_RECALL, VAL_RECALL, TEST_LONG_RECALL, VOCAB_SIZE,
 )
-# Toggle model: "sliding" or "stair"
-MODEL_TYPE = "sliding"
+# Toggle model: "sliding", "stair", or "mamba3"
+MODEL_TYPE = "mamba3"
 
 if MODEL_TYPE == "sliding":
     from rope_sliding_cache_model import GPT, GPTConfig
 elif MODEL_TYPE == "stair":
     from rope_stair_model import GPT, GPTConfig
+elif MODEL_TYPE == "mamba3":
+    from mamba3_model import GPT, GPTConfig
 
 # --- Hyperparameters ---
 MICRO_BATCH_SIZE = 32       # fits in GPU memory — adjust per hardware
