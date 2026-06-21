@@ -138,14 +138,17 @@ class CausalSelfAttention(nn.Module):
 
 
 class MLP(nn.Module):
+  """SwiGLU MLP — identical to mamba3_model.py so the MLP block is the same across
+  all three models (controls for the MLP as a confound in the comparison)."""
   def __init__(self, config: GPTConfig):
     super().__init__()
-    self.c_fc = nn.Linear(config.n_embd, 4 * config.n_embd)
-    self.gelu = nn.GELU(approximate='tanh')
-    self.c_proj = nn.Linear(4 * config.n_embd, config.n_embd)
+    hidden = 4 * config.n_embd
+    self.w_gate = nn.Linear(config.n_embd, hidden, bias=False)
+    self.w_up = nn.Linear(config.n_embd, hidden, bias=False)
+    self.w_down = nn.Linear(hidden, config.n_embd, bias=False)
 
   def forward(self, x):
-    return self.c_proj(self.gelu(self.c_fc(x)))
+    return self.w_down(F.silu(self.w_gate(x)) * self.w_up(x))
 
 
 class Block(nn.Module):
