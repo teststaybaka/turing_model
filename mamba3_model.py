@@ -55,6 +55,10 @@ class GPTConfig:
     expand: int = 2          # d_inner = expand * n_embd
     d_state: int = 16        # SSM state size N per head; must be even (2x2 rotation blocks)
     mimo_rank: int = 1       # 1 = SISO (paper default); >1 = MIMO
+    # Ablation switches. Both True = full Mamba-3. Both False = Mamba-2 (Euler, real SSM).
+    # Flip one at a time to attribute any convergence gap to a single Mamba-3 contribution.
+    use_rotation: bool = True    # complex/rotational state (data-dependent RoPE on the state)
+    use_trapezoid: bool = True   # exponential-trapezoidal discretization; False = Euler (Mamba-2)
 
 
 def _rms_norm(x, weight, eps=1e-5):
@@ -77,6 +81,8 @@ class Mamba3Mixer(nn.Module):
         self.head_dim = self.d_inner // config.n_heads      # P
         self.d_state = config.d_state                       # N
         self.R = config.mimo_rank
+        self.use_rotation = config.use_rotation
+        self.use_trapezoid = config.use_trapezoid
         nh, N, P, R = self.n_heads, self.d_state, self.head_dim, self.R
 
         # Input projection -> gate z (d_inner) and SSM input x (d_inner * R for MIMO).
@@ -144,23 +150,31 @@ class Mamba3Mixer(nn.Module):
 
         dt = F.softplus(self.dt_proj(x))                               # (B,T,nh)  > 0
         A = -torch.exp(self.A_log)                                     # (nh,)     < 0, static
-        lam = torch.sigmoid(self.lam_proj(x))                          # (B,T,nh) in (0,1)
         alpha = torch.exp(dt * A)                                      # (B,T,nh) in (0,1)
-        beta = (1.0 - lam) * dt * alpha                                # (B,T,nh)
-        gamma = lam * dt                                               # (B,T,nh)
+        if self.use_trapezoid:
+            lam = torch.sigmoid(self.lam_proj(x))                      # (B,T,nh) in (0,1)
+            beta = (1.0 - lam) * dt * alpha                            # (B,T,nh)
+            gamma = lam * dt                                           # (B,T,nh)
+        else:
+            beta = None                                               # Euler: drop the B_{t-1}x_{t-1} term
+            gamma = dt                                                 # h_t = alpha h_{t-1} + dt v_t (Mamba-2)
 
-        # Per-step rotation angles: dt * (data-dependent theta + log-spaced base freq).
-        theta = self.theta_proj(x).view(B, T, nh, N // 2) + self.theta_base
-        ang = dt.unsqueeze(-1) * theta                                 # (B,T,nh,N/2)
-        cos = torch.cat((torch.cos(ang), torch.cos(ang)), dim=-1)      # (B,T,nh,N)
-        sin = torch.cat((torch.sin(ang), torch.sin(ang)), dim=-1)
+        if self.use_rotation:
+            # Per-step rotation angles: dt * (data-dependent theta + log-spaced base freq).
+            theta = self.theta_proj(x).view(B, T, nh, N // 2) + self.theta_base
+            ang = dt.unsqueeze(-1) * theta                             # (B,T,nh,N/2)
+            cos = torch.cat((torch.cos(ang), torch.cos(ang)), dim=-1)  # (B,T,nh,N)
+            sin = torch.cat((torch.sin(ang), torch.sin(ang)), dim=-1)
 
         # Run the recurrence in fp32 for stability under bf16 autocast.
         # State-input outer product v_t = B_t (x)_t^T, contracted over the MIMO rank R:
         #   v_t[n, p] = sum_r B_t[n, r] * x_t[p, r]   -> (B, nh, N, P)
         Bm = Bm.float(); xin = xin.float(); Cm = Cm.float()
-        alpha = alpha.float(); beta = beta.float(); gamma = gamma.float()
-        cos = cos.float(); sin = sin.float()
+        alpha = alpha.float(); gamma = gamma.float()
+        if self.use_trapezoid:
+            beta = beta.float()
+        if self.use_rotation:
+            cos = cos.float(); sin = sin.float()
 
         if state is None:
             g = x.new_zeros(B, nh, N, P, dtype=torch.float32)
@@ -172,11 +186,13 @@ class Mamba3Mixer(nn.Module):
         ys = []
         for t in range(T):
             v_t = torch.einsum('bhnr,bhpr->bhnp', Bm[:, t], xin[:, t])
-            # h_t = R(dt theta) [ alpha h_{t-1} + beta v_{t-1} ] + gamma v_t
-            g = self._rotate_state(
-                alpha[:, t, :, None, None] * g + beta[:, t, :, None, None] * v_prev,
-                cos[:, t], sin[:, t],
-            ) + gamma[:, t, :, None, None] * v_t
+            # h_t = R(dt theta) [ alpha h_{t-1} (+ beta v_{t-1}) ] + gamma v_t
+            decayed = alpha[:, t, :, None, None] * g
+            if self.use_trapezoid:
+                decayed = decayed + beta[:, t, :, None, None] * v_prev
+            if self.use_rotation:
+                decayed = self._rotate_state(decayed, cos[:, t], sin[:, t])
+            g = decayed + gamma[:, t, :, None, None] * v_t
             v_prev = v_t
             y_t = torch.einsum('bhnr,bhnp->bhpr', Cm[:, t], g).reshape(B, nh * P * R)
             ys.append(y_t)
