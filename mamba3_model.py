@@ -156,7 +156,9 @@ class Mamba3Mixer(nn.Module):
             beta = (1.0 - lam) * dt * alpha                            # (B,T,nh)
             gamma = lam * dt                                           # (B,T,nh)
         else:
-            beta = None                                               # Euler: drop the B_{t-1}x_{t-1} term
+            # Euler (Mamba-2): beta=0. Keep it a real zero tensor (NOT None) so the scan
+            # body stays branch-free and torch.compile fuses one graph instead of breaking.
+            beta = torch.zeros_like(dt)
             gamma = dt                                                 # h_t = alpha h_{t-1} + dt v_t (Mamba-2)
 
         if self.use_rotation:
@@ -170,9 +172,7 @@ class Mamba3Mixer(nn.Module):
         # State-input outer product v_t = B_t (x)_t^T, contracted over the MIMO rank R:
         #   v_t[n, p] = sum_r B_t[n, r] * x_t[p, r]   -> (B, nh, N, P)
         Bm = Bm.float(); xin = xin.float(); Cm = Cm.float()
-        alpha = alpha.float(); gamma = gamma.float()
-        if self.use_trapezoid:
-            beta = beta.float()
+        alpha = alpha.float(); beta = beta.float(); gamma = gamma.float()
         if self.use_rotation:
             cos = cos.float(); sin = sin.float()
 
@@ -187,9 +187,7 @@ class Mamba3Mixer(nn.Module):
         for t in range(T):
             v_t = torch.einsum('bhnr,bhpr->bhnp', Bm[:, t], xin[:, t])
             # h_t = R(dt theta) [ alpha h_{t-1} (+ beta v_{t-1}) ] + gamma v_t
-            decayed = alpha[:, t, :, None, None] * g
-            if self.use_trapezoid:
-                decayed = decayed + beta[:, t, :, None, None] * v_prev
+            decayed = alpha[:, t, :, None, None] * g + beta[:, t, :, None, None] * v_prev
             if self.use_rotation:
                 decayed = self._rotate_state(decayed, cos[:, t], sin[:, t])
             g = decayed + gamma[:, t, :, None, None] * v_t
