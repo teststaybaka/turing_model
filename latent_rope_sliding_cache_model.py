@@ -14,16 +14,14 @@ Diff from model.py (standard GPT):
   window the indices never exceed 2*block_size, so one fixed cos/sin table serves
   arbitrarily long streams — no absolute position tracking, no table regrowth, no drift.
 - Standard next-token alignment: logits[i] predicts idx[i+1] (no pair-sum, no prev_tokens).
-- FlexAttention for the cache-carry branch (same as stair/multi_scale models): a block mask
-  skips the ~half of [K_cache | K_new] outside each query's window, vs a dense attn_mask
-  which would force SDPA off the flash kernel.
+- The cache-carry branch uses a materialized boolean SDPA mask instead of
+  FlexAttention, which avoids FlexAttention shape-specialization issues.
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from dataclasses import dataclass
-from torch.nn.attention.flex_attention import flex_attention, create_block_mask
 
 @dataclass
 class GPTConfig:
@@ -69,28 +67,22 @@ class CausalSelfAttention(nn.Module):
     self.n_embd = config.n_embd
     # sliding-window size in tokens; also the size of the KV cache.
     self.window_size = config.block_size
-    # BlockMask cache keyed by (T_new, T_cache, device). Training sees one steady-state
-    # shape; eval tail chunks add a few more.
-    self._block_mask_cache = {}
+    self._attn_mask_cache = {}
 
-  def _get_block_mask(self, T_new, T_cache, device):
+  def _get_attn_mask(self, T_new, T_cache, device):
     key = (T_new, T_cache, str(device))
-    cached = self._block_mask_cache.get(key)
+    cached = self._attn_mask_cache.get(key)
     if cached is not None:
       return cached
     W = self.window_size
-    def mask_mod(b, h, q_idx, kv_idx):
-      # K_all layout: [K_cache (T_cache) | k_live (T_new)]. Query at intra-chunk
-      # index q sits at K_all index q + T_cache; it attends to the last W keys.
-      dist = q_idx + T_cache - kv_idx
-      return (dist >= 0) & (dist < W)
-    block_mask = create_block_mask(
-        mask_mod, B=None, H=None,
-        Q_LEN=T_new, KV_LEN=T_cache + T_new,
-        device=device,
-    )
-    self._block_mask_cache[key] = block_mask
-    return block_mask
+    q_idx = torch.arange(T_new, device=device)[:, None]
+    kv_idx = torch.arange(T_cache + T_new, device=device)[None, :]
+    # K_all layout: [K_cache (T_cache) | k_live (T_new)]. Query q sits at
+    # K_all index q + T_cache and attends to the last W keys.
+    dist = q_idx + T_cache - kv_idx
+    attn_mask = ((dist >= 0) & (dist < W))[None, None, :, :]
+    self._attn_mask_cache[key] = attn_mask
+    return attn_mask
 
   def forward(self, x, cos, sin, kv_cache=None):
     """
@@ -133,11 +125,10 @@ class CausalSelfAttention(nn.Module):
       k_rot = _apply_rope(K_all, cos[:T_all], sin[:T_all])
       q_rot = _apply_rope(q, cos[T_cache:T_all], sin[T_cache:T_all])
 
-      # Sliding-window mask, same rule as sliding_cache_model: query at intra-chunk
-      # index q_i attends to K_all indices [q_i + T_cache - W + 1, q_i + T_cache].
-      # FlexAttention block mask skips the ~half of K_all outside each query's window.
-      block_mask = self._get_block_mask(T_new, T_cache, q.device)
-      y = flex_attention(q_rot, k_rot, V_all, block_mask=block_mask)
+      # Sliding-window mask: query q_i attends to K_all indices
+      # [q_i + T_cache - W + 1, q_i + T_cache].
+      attn_mask = self._get_attn_mask(T_new, T_cache, q.device)
+      y = F.scaled_dot_product_attention(q_rot, k_rot, V_all, attn_mask=attn_mask)
 
     y = y.transpose(1, 2).contiguous().view(B, T_new, C) # re-assemble heads
     y = self.c_proj(y)

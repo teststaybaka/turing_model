@@ -22,7 +22,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from dataclasses import dataclass
-from torch.nn.attention.flex_attention import flex_attention, create_block_mask
 
 
 @dataclass
@@ -76,30 +75,26 @@ class StairAttention(nn.Module):
         self.n_heads = config.n_heads
         self.n_embd = config.n_embd
         self.window_size = config.block_size
-        self._block_mask_cache = {}
+        self._attn_mask_cache = {}
 
-    def _get_block_mask(self, T_new, T_low, T_high_total, device):
+    def _get_attn_mask(self, T_new, T_low, T_high_total, device):
         key = (T_new, T_low, T_high_total, str(device))
-        cached = self._block_mask_cache.get(key)
+        cached = self._attn_mask_cache.get(key)
         if cached is not None:
             return cached
         W = self.window_size
         half_W = W // 2
-        def mask_mod(b, h, q_idx, kv_idx):
-            # K_combined layout: [K_high | K_low | K_live].
-            is_high = kv_idx < T_high_total
-            high_dist = q_idx - (kv_idx - T_high_total)
-            low_dist = q_idx - (kv_idx - T_high_total - T_low)
-            high_ok = (high_dist >= half_W) & (high_dist < W)
-            low_ok = (low_dist >= 0) & (low_dist < half_W)
-            return torch.where(is_high, high_ok, low_ok)
-        block_mask = create_block_mask(
-            mask_mod, B=None, H=None,
-            Q_LEN=T_new, KV_LEN=T_high_total + T_low + T_new,
-            device=device,
-        )
-        self._block_mask_cache[key] = block_mask
-        return block_mask
+        q_idx = torch.arange(T_new, device=device)[:, None]
+        kv_idx = torch.arange(T_high_total + T_low + T_new, device=device)[None, :]
+        # K_combined layout: [K_high | K_low | K_live].
+        is_high = kv_idx < T_high_total
+        high_dist = q_idx - (kv_idx - T_high_total)
+        low_dist = q_idx - (kv_idx - T_high_total - T_low)
+        high_ok = (high_dist >= half_W) & (high_dist < W)
+        low_ok = (low_dist >= 0) & (low_dist < half_W)
+        attn_mask = torch.where(is_high, high_ok, low_ok)[None, None, :, :]
+        self._attn_mask_cache[key] = attn_mask
+        return attn_mask
 
     def forward(self, x, cos, sin, cache=None):
         B, T_new, C = x.size()
@@ -134,8 +129,8 @@ class StairAttention(nn.Module):
         ])
         k_rot = _apply_rope(K_combined, cos[pos], sin[pos])
 
-        block_mask = self._get_block_mask(T_new, T_low, T_high_total, q.device)
-        y = flex_attention(q_rot, k_rot, V_combined, block_mask=block_mask)
+        attn_mask = self._get_attn_mask(T_new, T_low, T_high_total, q.device)
+        y = F.scaled_dot_product_attention(q_rot, k_rot, V_combined, attn_mask=attn_mask)
         return self._merge_heads(y, B, T_new, C), (k, v)
 
     def _merge_heads(self, y, B, T_new, C):
