@@ -4,7 +4,7 @@ Latent-feedback pretraining script for the Turing machine memory tasks (recall /
 Single pass through training data (no epochs), step-based like FineWeb pretraining.
 Uses masked cross-entropy on graded tokens only (recall: the recall WRITEs;
 deferred branch: all action tokens).
-Sequences are processed one token at a time so latent_out[t] feeds input[t+1].
+Sequences split into chunks with KV cache carry and BPTT.
 Gradient accumulation: effective_batch = micro_batch_size * grad_accum_steps.
 """
 
@@ -89,24 +89,24 @@ def masked_cross_entropy(logits, targets, mask):
 
 
 def forward_chunked(model, input_ids, target_ids, loss_mask, chunk_size):
-    """Process a sequence one token at a time for exact latent feedback."""
+    """Process a sequence in chunks with KV cache carry (BPTT — no detach)."""
     B, T = input_ids.size()
     kv_caches = None
-    latent = None
     total_loss = torch.tensor(0.0, device=input_ids.device)
     total_masked = 0
 
-    for pos in range(T):
-        token_inp = input_ids[:, pos:pos + 1].contiguous()
-        token_tgt = target_ids[:, pos:pos + 1].contiguous()
-        token_mask = loss_mask[:, pos:pos + 1].contiguous()
+    for start in range(0, T, chunk_size):
+        end = min(start + chunk_size, T)
+        chunk_inp = input_ids[:, start:end].contiguous()
+        chunk_tgt = target_ids[:, start:end].contiguous()
+        chunk_mask = loss_mask[:, start:end].contiguous()
 
-        logits, latent, kv_caches = model(token_inp, latent=latent, kv_caches=kv_caches)
+        logits, _latent_out, kv_caches = model(chunk_inp, kv_caches=kv_caches)
 
-        n_masked = token_mask.sum().item()
+        n_masked = chunk_mask.sum().item()
         if n_masked > 0:
-            token_loss = masked_cross_entropy(logits, token_tgt, token_mask)
-            total_loss = total_loss + token_loss * n_masked
+            chunk_loss = masked_cross_entropy(logits, chunk_tgt, chunk_mask)
+            total_loss = total_loss + chunk_loss * n_masked
             total_masked += n_masked
 
     return total_loss / total_masked if total_masked > 0 else total_loss
@@ -127,12 +127,12 @@ def evaluate(model, loader, chunk_size):
 
                 B, T = input_ids.size()
                 kv_caches = None
-                latent = None
                 all_logits = []
 
-                for pos in range(T):
-                    token = input_ids[:, pos:pos + 1].contiguous()
-                    logits, latent, kv_caches = model(token, latent=latent, kv_caches=kv_caches)
+                for start in range(0, T, chunk_size):
+                    end = min(start + chunk_size, T)
+                    chunk = input_ids[:, start:end].contiguous()
+                    logits, _latent_out, kv_caches = model(chunk, kv_caches=kv_caches)
                     all_logits.append(logits)
 
                 all_logits = torch.cat(all_logits, dim=1)
@@ -174,7 +174,7 @@ def train():
     n_params = sum(p.numel() for p in model.parameters())
     print(f"Model: {n_params:,} parameters")
     print(f"Config: {config}")
-    print(f"Cache chunk size setting: {chunk_size} (latent loop runs one token at a time)")
+    print(f"Chunk size: {chunk_size}")
     print(f"Device: {DEVICE}")
     print(f"Train: {len(train_dataset)} examples")
     print(f"Micro batch: {MICRO_BATCH_SIZE}, Grad accum: {GRAD_ACCUM_STEPS}, Effective batch: {MICRO_BATCH_SIZE * GRAD_ACCUM_STEPS}")
