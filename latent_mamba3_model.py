@@ -1,8 +1,7 @@
 """Latent-feedback copy of mamba3_model.py.
 
-Input at each position is [token_embedding, latent_embedding]. The final hidden
-state is split into a token slice for lm_head and a raw latent slice returned to
-the caller for feedback.
+Input at each position is a learned fusion of [token_embedding, latent_embedding].
+The final hidden state feeds separate token and latent output heads.
 
 Mamba-3 (ICLR 2026, "Mamba-3: Improved Sequence Modeling using State Space
 Principles", openreview HwCvaJOiCj) as a recurrent baseline for the infinite-context
@@ -61,7 +60,6 @@ class GPTConfig:
     expand: int = 2          # d_inner = expand * n_embd
     d_state: int = 16        # SSM state size N per head; must be even (2x2 rotation blocks)
     mimo_rank: int = 1       # 1 = SISO (paper default); >1 = MIMO
-    latent_dim: int = 384
 
 
 def _rms_norm(x, weight, eps=1e-5):
@@ -211,6 +209,18 @@ class SwiGLU(nn.Module):
         return self.w_down(F.silu(self.w_gate(x)) * self.w_up(x))
 
 
+class SwiGLUProject(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super().__init__()
+        hidden = 4 * out_dim
+        self.w_gate = nn.Linear(in_dim, hidden, bias=False)
+        self.w_up = nn.Linear(in_dim, hidden, bias=False)
+        self.w_down = nn.Linear(hidden, out_dim, bias=False)
+
+    def forward(self, x):
+        return self.w_down(F.silu(self.w_gate(x)) * self.w_up(x))
+
+
 class Block(nn.Module):
     def __init__(self, config: GPTConfig):
         super().__init__()
@@ -229,16 +239,18 @@ class Block(nn.Module):
 class GPT(nn.Module):
     def __init__(self, config: GPTConfig):
         super().__init__()
-        assert 0 < config.latent_dim < config.n_embd
         self.config = config
-        self.latent_dim = config.latent_dim
-        self.token_dim = config.n_embd - config.latent_dim
         self.transformer = nn.ModuleDict({
-            'wte': nn.Embedding(config.vocab_size, self.token_dim),
+            'wte': nn.Embedding(config.vocab_size, config.n_embd),
             'h': nn.ModuleList(Block(config) for _ in range(config.n_layers)),
             'ln_f': nn.LayerNorm(config.n_embd),
         })
-        self.lm_head = nn.Linear(self.token_dim, config.vocab_size, bias=False)
+        self.input_mlp = SwiGLUProject(2 * config.n_embd, config.n_embd)
+        self.token_mlp = SwiGLUProject(config.n_embd, config.n_embd)
+        self.latent_mlp = SwiGLUProject(config.n_embd, config.n_embd)
+        self.token_ln = nn.LayerNorm(config.n_embd)
+        self.latent_ln = nn.LayerNorm(config.n_embd)
+        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
         self.apply(self._init_weights)
         for module in self.modules():
             if isinstance(module, Mamba3Mixer):
@@ -256,16 +268,16 @@ class GPT(nn.Module):
         B, T = idx.size()
         token_x = self.transformer['wte'](idx)
         if latent is None:
-            latent = token_x.new_zeros(B, T, self.latent_dim)
-        assert latent.shape == (B, T, self.latent_dim)
-        return torch.cat([token_x, latent.to(dtype=token_x.dtype)], dim=-1)
+            latent = token_x.new_zeros(B, T, self.config.n_embd)
+        assert latent.shape == (B, T, self.config.n_embd)
+        return self.input_mlp(torch.cat([token_x, latent.to(dtype=token_x.dtype)], dim=-1))
 
     def forward(self, idx, latent=None, kv_caches=None):
         """
         idx: (B, T_new) token ids.
-        latent: optional (B, T_new, latent_dim) latent feedback inputs.
+        latent: optional (B, T_new, n_embd) latent feedback inputs.
         kv_caches: list of per-layer SSM states (g, v_prev), or None.
-        Returns logits, raw latent_out, and new per-layer recurrent states.
+        Returns logits, latent_out, and new per-layer recurrent states.
         """
         x = self._build_input(idx, latent)
         new_states = []
@@ -274,6 +286,7 @@ class GPT(nn.Module):
             x, new_state = block(x, state=layer_state)
             new_states.append(new_state)
         x = self.transformer.ln_f(x)
-        token_x, latent_out = x.split([self.token_dim, self.latent_dim], dim=-1)
-        logits = self.lm_head(token_x)
+        token_state = self.token_ln(self.token_mlp(x))
+        latent_out = self.latent_ln(self.latent_mlp(x))
+        logits = self.lm_head(token_state)
         return logits, latent_out, new_states

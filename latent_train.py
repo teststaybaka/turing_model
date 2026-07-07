@@ -35,7 +35,7 @@ MICRO_BATCH_SIZE = 128       # fits in GPU memory — adjust per hardware
 GRAD_ACCUM_STEPS = 1        # effective batch 128 examples
 EVAL_INTERVAL = 50          # eval every N optimizer steps
 DEVICE = "cuda"
-COMPILE = False             # token-by-token latent feedback has too many shapes for compile
+COMPILE = MODEL_TYPE == "mamba3"  # sliding/stair hit many cache-mask shapes token by token
 
 max_lr = 3e-4
 min_lr = max_lr * 0.1
@@ -47,7 +47,6 @@ config = GPTConfig(
     n_layers=4,
     n_heads=4,
     n_embd=64,
-    latent_dim=32,
 )
 
 log_dir = "log"

@@ -46,7 +46,6 @@ config = GPTConfig(
     n_layers=4,
     n_heads=4,
     n_embd=64,
-    latent_dim=32,
 )
 
 log_dir = "log"
