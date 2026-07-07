@@ -36,6 +36,7 @@ GRAD_ACCUM_STEPS = 1        # effective batch 128 examples
 EVAL_INTERVAL = 50          # eval every N optimizer steps
 DEVICE = "cuda"
 COMPILE = MODEL_TYPE == "mamba3"  # sliding/stair hit many cache-mask shapes token by token
+DETACH_LATENT = True              # test whether long-horizon latent gradients destabilize training
 
 max_lr = 3e-4
 min_lr = max_lr * 0.1
@@ -102,6 +103,8 @@ def forward_recurrent(model, input_ids, target_ids, loss_mask):
         token_mask = loss_mask[:, pos:pos + 1].contiguous()
 
         logits, latent, kv_caches = model(token_inp, latent=latent, kv_caches=kv_caches)
+        if DETACH_LATENT:
+            latent = latent.detach()
 
         n_masked = token_mask.sum().item()
         if n_masked > 0:
@@ -133,6 +136,8 @@ def evaluate(model, loader):
                 for pos in range(T):
                     token = input_ids[:, pos:pos + 1].contiguous()
                     logits, latent, kv_caches = model(token, latent=latent, kv_caches=kv_caches)
+                    if DETACH_LATENT:
+                        latent = latent.detach()
                     all_logits.append(logits)
 
                 all_logits = torch.cat(all_logits, dim=1)
@@ -177,6 +182,7 @@ def train():
     print(f"Config: {config}")
     print(f"Chunk size: {chunk_size}")
     print(f"Compile: {COMPILE}")
+    print(f"Detach latent: {DETACH_LATENT}")
     print(f"Device: {DEVICE}")
     print(f"Train: {len(train_dataset)} examples")
     print(f"Micro batch: {MICRO_BATCH_SIZE}, Grad accum: {GRAD_ACCUM_STEPS}, Effective batch: {MICRO_BATCH_SIZE * GRAD_ACCUM_STEPS}")
