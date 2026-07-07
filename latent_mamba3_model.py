@@ -251,6 +251,7 @@ class GPT(nn.Module):
         self.token_ln = nn.LayerNorm(config.n_embd)
         self.latent_ln = nn.LayerNorm(config.n_embd)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        self.transformer['wte'].weight = self.lm_head.weight
         self.apply(self._init_weights)
         for module in self.modules():
             if isinstance(module, Mamba3Mixer):
