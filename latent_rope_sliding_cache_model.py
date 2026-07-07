@@ -1,8 +1,7 @@
 """Latent-feedback copy of rope_sliding_cache_model.py.
 
-Input at each position is [token_embedding, latent_embedding]. The final hidden
-state is split into a token slice for lm_head and a raw latent slice returned to
-the caller for feedback.
+Input at each position is a learned fusion of [token_embedding, latent_embedding].
+The final hidden state feeds separate token and latent output heads.
 
 Diff from model.py (standard GPT):
 - RoPE replaces learned positional embeddings (split-half convention, same as rope_model.py).
@@ -31,7 +30,6 @@ class GPTConfig:
   n_heads: int = 12 #nh
   n_embd: int = 768
   rope_base: float = 10000.0 # RoPE frequency base (GPT-NeoX / Llama convention)
-  latent_dim: int = 384
 
 
 def _precompute_rope(head_dim, max_seq_len, base):
@@ -149,6 +147,18 @@ class MLP(nn.Module):
     return self.w_down(F.silu(self.w_gate(x)) * self.w_up(x))
 
 
+class SwiGLUProject(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super().__init__()
+        hidden = 4 * out_dim
+        self.w_gate = nn.Linear(in_dim, hidden, bias=False)
+        self.w_up = nn.Linear(in_dim, hidden, bias=False)
+        self.w_down = nn.Linear(hidden, out_dim, bias=False)
+
+    def forward(self, x):
+        return self.w_down(F.silu(self.w_gate(x)) * self.w_up(x))
+
+
 class Block(nn.Module):
   def __init__(self, config: GPTConfig):
     super().__init__()
@@ -167,16 +177,18 @@ class Block(nn.Module):
 class GPT(nn.Module):
   def __init__(self, config: GPTConfig):
     super().__init__()
-    assert 0 < config.latent_dim < config.n_embd
     self.config = config
-    self.latent_dim = config.latent_dim
-    self.token_dim = config.n_embd - config.latent_dim
     self.transformer = nn.ModuleDict({
-        'wte': nn.Embedding(config.vocab_size, self.token_dim),
+        'wte': nn.Embedding(config.vocab_size, config.n_embd),
         'h': nn.ModuleList(Block(config) for _ in range(config.n_layers)),
         'ln_f': nn.LayerNorm(config.n_embd),
     })
-    self.lm_head = nn.Linear(self.token_dim, config.vocab_size, bias=False)
+    self.input_mlp = SwiGLUProject(2 * config.n_embd, config.n_embd)
+    self.token_mlp = SwiGLUProject(config.n_embd, config.n_embd)
+    self.latent_mlp = SwiGLUProject(config.n_embd, config.n_embd)
+    self.token_ln = nn.LayerNorm(config.n_embd)
+    self.latent_ln = nn.LayerNorm(config.n_embd)
+    self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
 
     # RoPE tables sized 2*block_size: max cache-relative index is
     # T_cache + T_new - 1 <= 2W - 1. Non-persistent (recomputable from config).
@@ -199,16 +211,16 @@ class GPT(nn.Module):
     B, T = idx.size()
     token_x = self.transformer['wte'](idx)
     if latent is None:
-      latent = token_x.new_zeros(B, T, self.latent_dim)
-    assert latent.shape == (B, T, self.latent_dim)
-    return torch.cat([token_x, latent.to(dtype=token_x.dtype)], dim=-1)
+      latent = token_x.new_zeros(B, T, self.config.n_embd)
+    assert latent.shape == (B, T, self.config.n_embd)
+    return self.input_mlp(torch.cat([token_x, latent.to(dtype=token_x.dtype)], dim=-1))
 
   def forward(self, idx, latent=None, kv_caches=None):
     """
     idx: (B, T_new) token ids. T_new <= block_size.
-    latent: optional (B, T_new, latent_dim) latent feedback inputs.
+    latent: optional (B, T_new, n_embd) latent feedback inputs.
     kv_caches: list of accumulated (K, V) rolling windows per layer, or None.
-    Returns logits, raw latent_out, and new accumulated K/V windows.
+    Returns logits, latent_out, and new accumulated K/V windows.
     """
     B, T_new = idx.size()
     assert T_new <= self.config.block_size, "chunk exceeds block_size"
@@ -222,8 +234,9 @@ class GPT(nn.Module):
       fresh_kv.append(new_kv)
 
     x = self.transformer.ln_f(x)
-    token_x, latent_out = x.split([self.token_dim, self.latent_dim], dim=-1)
-    logits = self.lm_head(token_x)
+    token_state = self.token_ln(self.token_mlp(x))
+    latent_out = self.latent_ln(self.latent_mlp(x))
+    logits = self.lm_head(token_state)
 
     new_kv_caches = []
     max_cache = self.config.block_size - 1
