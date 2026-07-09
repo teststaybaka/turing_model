@@ -169,37 +169,36 @@ def evaluate(model, loader):
     correct = 0
     total = 0
     with torch.no_grad():
-        with torch.autocast(device_type=DEVICE, dtype=torch.bfloat16, enabled=(DEVICE == "cuda")):
-            for batch in loader:
-                reads, prev_actions, targets, loss_mask = unpack_batch(batch, DEVICE)
-                _, T = loss_mask.size()
-                states = None
-                latent = None
-                all_logits = [[] for _ in targets]
+        for batch in loader:
+            reads, prev_actions, targets, loss_mask = unpack_batch(batch, DEVICE)
+            _, T = loss_mask.size()
+            states = None
+            latent = None
+            all_logits = [[] for _ in targets]
 
-                for pos in range(T):
-                    logits, latent, states = model(
-                        reads[:, pos:pos + 1].contiguous(),
-                        prev_actions[:, pos:pos + 1].contiguous(),
-                        latent=latent,
-                        states=states,
-                    )
-                    if DETACH_LATENT:
-                        latent = latent.detach()
-                    for i, logit in enumerate(logits):
-                        all_logits[i].append(logit)
+            for pos in range(T):
+                logits, latent, states = model(
+                    reads[:, pos:pos + 1].contiguous(),
+                    prev_actions[:, pos:pos + 1].contiguous(),
+                    latent=latent,
+                    states=states,
+                )
+                if DETACH_LATENT:
+                    latent = latent.detach()
+                for i, logit in enumerate(logits):
+                    all_logits[i].append(logit)
 
-                all_logits = tuple(torch.cat(parts, dim=1) for parts in all_logits)
-                batch_loss = factorized_loss(all_logits, targets, loss_mask)
-                n_tokens = loss_mask.sum().item()
-                total_loss += batch_loss.item() * n_tokens
-                total_tokens += n_tokens
+            all_logits = tuple(torch.cat(parts, dim=1) for parts in all_logits)
+            batch_loss = factorized_loss(all_logits, targets, loss_mask)
+            n_tokens = loss_mask.sum().item()
+            total_loss += batch_loss.item() * n_tokens
+            total_tokens += n_tokens
 
-                factor_correct = torch.ones_like(loss_mask, dtype=torch.bool)
-                for logit, target in zip(all_logits, targets):
-                    factor_correct &= logit.argmax(dim=-1).eq(target)
-                correct += (factor_correct.float() * loss_mask).sum().item()
-                total += n_tokens
+            factor_correct = torch.ones_like(loss_mask, dtype=torch.bool)
+            for logit, target in zip(all_logits, targets):
+                factor_correct &= logit.argmax(dim=-1).eq(target)
+            correct += (factor_correct.float() * loss_mask).sum().item()
+            total += n_tokens
     return total_loss / total_tokens, correct / total
 
 
@@ -258,8 +257,7 @@ def train():
         for _ in range(GRAD_ACCUM_STEPS):
             batch = next(batch_iter)
             reads, prev_actions, targets, loss_mask = unpack_batch(batch, DEVICE)
-            with torch.autocast(device_type=DEVICE, dtype=torch.bfloat16, enabled=(DEVICE == "cuda")):
-                loss = forward_recurrent(model, reads, prev_actions, targets, loss_mask)
+            loss = forward_recurrent(model, reads, prev_actions, targets, loss_mask)
             loss = loss / GRAD_ACCUM_STEPS
             loss.backward()
             loss_accum += loss.detach()
