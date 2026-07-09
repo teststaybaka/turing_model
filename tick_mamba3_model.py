@@ -1,9 +1,9 @@
 """Mamba-3 model for tick-level Turing-machine supervision.
 
 Each tick input is:
-  input_tape_read, output_tape_read, previous_action, previous_latent
+  head reads, previous factorized actions, previous latent
 
-The model emits action logits and a latent embedding for the next tick.
+The model emits factorized action logits and a latent embedding for the next tick.
 """
 
 import math
@@ -16,8 +16,11 @@ from dataclasses import dataclass
 @dataclass
 class GPTConfig:
     block_size: int = 1024
-    read_vocab_size: int = 15
-    action_vocab_size: int = 15
+    read_vocab_size: int = 16
+    move_vocab_size: int = 5
+    write_vocab_size: int = 18
+    done_vocab_size: int = 4
+    token_embd: int = 32
     n_layers: int = 12
     n_heads: int = 12
     n_embd: int = 768
@@ -161,17 +164,30 @@ class GPT(nn.Module):
     def __init__(self, config: GPTConfig):
         super().__init__()
         self.config = config
-        self.input_read_emb = nn.Embedding(config.read_vocab_size, config.n_embd)
-        self.output_read_emb = nn.Embedding(config.read_vocab_size, config.n_embd)
-        self.action_emb = nn.Embedding(config.action_vocab_size, config.n_embd)
-        self.input_mlp = SwiGLUProject(4 * config.n_embd, config.n_embd)
+        self.read_emb = nn.Embedding(config.read_vocab_size, config.token_embd)
+        self.move_emb = nn.Embedding(config.move_vocab_size, config.token_embd)
+        self.write_emb = nn.Embedding(config.write_vocab_size, config.token_embd)
+        self.done_emb = nn.Embedding(config.done_vocab_size, config.token_embd)
+        self.input_mlp = SwiGLUProject(7 * config.token_embd + config.n_embd, config.n_embd)
         self.h = nn.ModuleList(Block(config) for _ in range(config.n_layers))
         self.ln_f = nn.LayerNorm(config.n_embd)
-        self.action_mlp = SwiGLUProject(config.n_embd, config.n_embd)
+        self.head0_move_mlp = SwiGLUProject(config.n_embd, config.n_embd)
+        self.head1_move_mlp = SwiGLUProject(config.n_embd, config.n_embd)
+        self.head0_write_mlp = SwiGLUProject(config.n_embd, config.n_embd)
+        self.head1_write_mlp = SwiGLUProject(config.n_embd, config.n_embd)
+        self.done_mlp = SwiGLUProject(config.n_embd, config.n_embd)
         self.latent_mlp = SwiGLUProject(config.n_embd, config.n_embd)
-        self.action_ln = nn.LayerNorm(config.n_embd)
+        self.head0_move_ln = nn.LayerNorm(config.n_embd)
+        self.head1_move_ln = nn.LayerNorm(config.n_embd)
+        self.head0_write_ln = nn.LayerNorm(config.n_embd)
+        self.head1_write_ln = nn.LayerNorm(config.n_embd)
+        self.done_ln = nn.LayerNorm(config.n_embd)
         self.latent_ln = nn.LayerNorm(config.n_embd)
-        self.action_head = nn.Linear(config.n_embd, config.action_vocab_size, bias=False)
+        self.head0_move_head = nn.Linear(config.n_embd, config.move_vocab_size, bias=False)
+        self.head1_move_head = nn.Linear(config.n_embd, config.move_vocab_size, bias=False)
+        self.head0_write_head = nn.Linear(config.n_embd, config.write_vocab_size, bias=False)
+        self.head1_write_head = nn.Linear(config.n_embd, config.write_vocab_size, bias=False)
+        self.done_head = nn.Linear(config.n_embd, config.done_vocab_size, bias=False)
 
         self.apply(self._init_weights)
         for module in self.modules():
@@ -186,24 +202,44 @@ class GPT(nn.Module):
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def _build_input(self, input_reads, output_reads, prev_actions, latent):
-        input_x = self.input_read_emb(input_reads)
-        output_x = self.output_read_emb(output_reads)
-        action_x = self.action_emb(prev_actions)
+    def _build_input(self, reads, prev_actions, latent):
+        assert reads.size(-1) == 2
+        assert prev_actions.size(-1) == 5
+        head0_read_x = self.read_emb(reads[..., 0])
+        head1_read_x = self.read_emb(reads[..., 1])
+        head0_move_x = self.move_emb(prev_actions[..., 0])
+        head1_move_x = self.move_emb(prev_actions[..., 1])
+        head0_write_x = self.write_emb(prev_actions[..., 2])
+        head1_write_x = self.write_emb(prev_actions[..., 3])
+        done_x = self.done_emb(prev_actions[..., 4])
         if latent is None:
-            latent = input_x.new_zeros(input_x.shape)
-        assert latent.shape == input_x.shape
-        return self.input_mlp(torch.cat([input_x, output_x, action_x, latent.to(dtype=input_x.dtype)], dim=-1))
+            latent = head0_read_x.new_zeros(*head0_read_x.shape[:-1], self.config.n_embd)
+        assert latent.shape == (*head0_read_x.shape[:-1], self.config.n_embd)
+        return self.input_mlp(torch.cat([
+            head0_read_x,
+            head1_read_x,
+            head0_move_x,
+            head1_move_x,
+            head0_write_x,
+            head1_write_x,
+            done_x,
+            latent.to(dtype=head0_read_x.dtype),
+        ], dim=-1))
 
-    def forward(self, input_reads, output_reads, prev_actions, latent=None, states=None):
-        x = self._build_input(input_reads, output_reads, prev_actions, latent)
+    def forward(self, reads, prev_actions, latent=None, states=None):
+        x = self._build_input(reads, prev_actions, latent)
         new_states = []
         for layer_idx, block in enumerate(self.h):
             layer_state = None if states is None else states[layer_idx]
             x, new_state = block(x, state=layer_state)
             new_states.append(new_state)
         x = self.ln_f(x)
-        action_state = self.action_ln(self.action_mlp(x))
         latent_out = self.latent_ln(self.latent_mlp(x))
-        action_logits = self.action_head(action_state)
-        return action_logits, latent_out, new_states
+        logits = (
+            self.head0_move_head(self.head0_move_ln(self.head0_move_mlp(x))),
+            self.head1_move_head(self.head1_move_ln(self.head1_move_mlp(x))),
+            self.head0_write_head(self.head0_write_ln(self.head0_write_mlp(x))),
+            self.head1_write_head(self.head1_write_ln(self.head1_write_mlp(x))),
+            self.done_head(self.done_ln(self.done_mlp(x))),
+        )
+        return logits, latent_out, new_states

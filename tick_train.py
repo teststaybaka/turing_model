@@ -1,7 +1,8 @@
 """Supervised tick-level Turing-machine training with Mamba-3.
 
 There is no READ action. At each tick the model observes both tape heads, the
-previous action, and the previous latent output, then predicts the next action.
+previous factorized actions, and the previous latent output, then predicts the
+next factorized actions.
 """
 
 import os
@@ -17,7 +18,9 @@ from tick_tape_data_loader import (
     VAL_STRINGS,
     TEST_LONG_STRINGS,
     READ_VOCAB_SIZE,
-    ACTION_VOCAB_SIZE,
+    MOVE_VOCAB_SIZE,
+    WRITE_VOCAB_SIZE,
+    DONE_VOCAB_SIZE,
 )
 from tick_mamba3_model import GPT, GPTConfig
 
@@ -28,7 +31,7 @@ EVAL_INTERVAL = 50
 DEVICE = "cuda"
 COMPILE = True
 DETACH_LATENT = False
-TASKS = ["copy", "mirror", "repeat"]
+TASKS = ["copy", "mirror", "recall", "reverse"]
 
 max_lr = 3e-4
 min_lr = max_lr * 0.1
@@ -37,7 +40,10 @@ warmup_steps = 30
 config = GPTConfig(
     block_size=32,
     read_vocab_size=READ_VOCAB_SIZE,
-    action_vocab_size=ACTION_VOCAB_SIZE,
+    move_vocab_size=MOVE_VOCAB_SIZE,
+    write_vocab_size=WRITE_VOCAB_SIZE,
+    done_vocab_size=DONE_VOCAB_SIZE,
+    token_embd=32,
     n_layers=4,
     n_heads=4,
     n_embd=64,
@@ -85,17 +91,59 @@ def masked_cross_entropy(logits, targets, mask):
     return (loss_per_token * mask).sum() / n_masked
 
 
-def forward_recurrent(model, input_reads, output_reads, prev_actions, target_actions, loss_mask):
-    _, T = target_actions.size()
+def unpack_batch(batch, device):
+    (
+        head0_reads,
+        head1_reads,
+        prev_head0_moves,
+        prev_head1_moves,
+        prev_head0_writes,
+        prev_head1_writes,
+        prev_done,
+        target_head0_moves,
+        target_head1_moves,
+        target_head0_writes,
+        target_head1_writes,
+        target_done,
+        loss_mask,
+    ) = [x.to(device) for x in batch]
+
+    reads = torch.stack((head0_reads, head1_reads), dim=-1)
+    prev_actions = torch.stack((
+        prev_head0_moves,
+        prev_head1_moves,
+        prev_head0_writes,
+        prev_head1_writes,
+        prev_done,
+    ), dim=-1)
+    targets = (
+        target_head0_moves,
+        target_head1_moves,
+        target_head0_writes,
+        target_head1_writes,
+        target_done,
+    )
+    return reads, prev_actions, targets, loss_mask
+
+
+def factorized_loss(logits, targets, mask):
+    losses = [
+        masked_cross_entropy(logit, target, mask)
+        for logit, target in zip(logits, targets)
+    ]
+    return sum(losses) / len(losses)
+
+
+def forward_recurrent(model, reads, prev_actions, targets, loss_mask):
+    _, T = loss_mask.size()
     states = None
     latent = None
-    total_loss = torch.tensor(0.0, device=target_actions.device)
+    total_loss = torch.tensor(0.0, device=loss_mask.device)
     total_masked = 0
 
     for pos in range(T):
         logits, latent, states = model(
-            input_reads[:, pos:pos + 1].contiguous(),
-            output_reads[:, pos:pos + 1].contiguous(),
+            reads[:, pos:pos + 1].contiguous(),
             prev_actions[:, pos:pos + 1].contiguous(),
             latent=latent,
             states=states,
@@ -106,11 +154,8 @@ def forward_recurrent(model, input_reads, output_reads, prev_actions, target_act
         token_mask = loss_mask[:, pos:pos + 1].contiguous()
         n_masked = token_mask.sum().item()
         if n_masked > 0:
-            token_loss = masked_cross_entropy(
-                logits,
-                target_actions[:, pos:pos + 1].contiguous(),
-                token_mask,
-            )
+            token_targets = tuple(target[:, pos:pos + 1].contiguous() for target in targets)
+            token_loss = factorized_loss(logits, token_targets, token_mask)
             total_loss = total_loss + token_loss * n_masked
             total_masked += n_masked
 
@@ -126,38 +171,35 @@ def evaluate(model, loader):
     with torch.no_grad():
         with torch.autocast(device_type=DEVICE, dtype=torch.bfloat16, enabled=(DEVICE == "cuda")):
             for batch in loader:
-                input_reads, output_reads, prev_actions, target_actions, loss_mask = [
-                    x.to(DEVICE) for x in batch
-                ]
-                _, T = target_actions.size()
+                reads, prev_actions, targets, loss_mask = unpack_batch(batch, DEVICE)
+                _, T = loss_mask.size()
                 states = None
                 latent = None
-                all_logits = []
+                all_logits = [[] for _ in targets]
 
                 for pos in range(T):
                     logits, latent, states = model(
-                        input_reads[:, pos:pos + 1].contiguous(),
-                        output_reads[:, pos:pos + 1].contiguous(),
+                        reads[:, pos:pos + 1].contiguous(),
                         prev_actions[:, pos:pos + 1].contiguous(),
                         latent=latent,
                         states=states,
                     )
                     if DETACH_LATENT:
                         latent = latent.detach()
-                    all_logits.append(logits)
+                    for i, logit in enumerate(logits):
+                        all_logits[i].append(logit)
 
-                all_logits = torch.cat(all_logits, dim=1)
-                loss_per_token = F.cross_entropy(
-                    all_logits.reshape(-1, all_logits.size(-1)),
-                    target_actions.reshape(-1),
-                    reduction="none",
-                ).view_as(target_actions)
-                total_loss += (loss_per_token * loss_mask).sum().item()
-                total_tokens += loss_mask.sum().item()
+                all_logits = tuple(torch.cat(parts, dim=1) for parts in all_logits)
+                batch_loss = factorized_loss(all_logits, targets, loss_mask)
+                n_tokens = loss_mask.sum().item()
+                total_loss += batch_loss.item() * n_tokens
+                total_tokens += n_tokens
 
-                preds = all_logits.argmax(dim=-1)
-                correct += ((preds == target_actions) * loss_mask).sum().item()
-                total += loss_mask.sum().item()
+                factor_correct = torch.ones_like(loss_mask, dtype=torch.bool)
+                for logit, target in zip(all_logits, targets):
+                    factor_correct &= logit.argmax(dim=-1).eq(target)
+                correct += (factor_correct.float() * loss_mask).sum().item()
+                total += n_tokens
     return total_loss / total_tokens, correct / total
 
 
@@ -215,11 +257,9 @@ def train():
 
         for _ in range(GRAD_ACCUM_STEPS):
             batch = next(batch_iter)
-            input_reads, output_reads, prev_actions, target_actions, loss_mask = [
-                x.to(DEVICE) for x in batch
-            ]
+            reads, prev_actions, targets, loss_mask = unpack_batch(batch, DEVICE)
             with torch.autocast(device_type=DEVICE, dtype=torch.bfloat16, enabled=(DEVICE == "cuda")):
-                loss = forward_recurrent(model, input_reads, output_reads, prev_actions, target_actions, loss_mask)
+                loss = forward_recurrent(model, reads, prev_actions, targets, loss_mask)
             loss = loss / GRAD_ACCUM_STEPS
             loss.backward()
             loss_accum += loss.detach()
