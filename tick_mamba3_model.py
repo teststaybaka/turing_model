@@ -19,7 +19,6 @@ class GPTConfig:
     read_vocab_size: int = 16
     move_vocab_size: int = 5
     write_vocab_size: int = 18
-    done_vocab_size: int = 4
     token_embd: int = 32
     n_layers: int = 12
     n_heads: int = 12
@@ -167,27 +166,23 @@ class GPT(nn.Module):
         self.read_emb = nn.Embedding(config.read_vocab_size, config.token_embd)
         self.move_emb = nn.Embedding(config.move_vocab_size, config.token_embd)
         self.write_emb = nn.Embedding(config.write_vocab_size, config.token_embd)
-        self.done_emb = nn.Embedding(config.done_vocab_size, config.token_embd)
-        self.input_mlp = SwiGLUProject(7 * config.token_embd + config.n_embd, config.n_embd)
+        self.input_mlp = SwiGLUProject(6 * config.token_embd + config.n_embd, config.n_embd)
         self.h = nn.ModuleList(Block(config) for _ in range(config.n_layers))
         self.ln_f = nn.LayerNorm(config.n_embd)
         self.head0_move_mlp = SwiGLUProject(config.n_embd, config.n_embd)
         self.head1_move_mlp = SwiGLUProject(config.n_embd, config.n_embd)
         self.head0_write_mlp = SwiGLUProject(config.n_embd, config.n_embd)
         self.head1_write_mlp = SwiGLUProject(config.n_embd, config.n_embd)
-        self.done_mlp = SwiGLUProject(config.n_embd, config.n_embd)
         self.latent_mlp = SwiGLUProject(config.n_embd, config.n_embd)
         self.head0_move_ln = nn.LayerNorm(config.n_embd)
         self.head1_move_ln = nn.LayerNorm(config.n_embd)
         self.head0_write_ln = nn.LayerNorm(config.n_embd)
         self.head1_write_ln = nn.LayerNorm(config.n_embd)
-        self.done_ln = nn.LayerNorm(config.n_embd)
         self.latent_ln = nn.LayerNorm(config.n_embd)
         self.head0_move_head = nn.Linear(config.n_embd, config.move_vocab_size, bias=False)
         self.head1_move_head = nn.Linear(config.n_embd, config.move_vocab_size, bias=False)
         self.head0_write_head = nn.Linear(config.n_embd, config.write_vocab_size, bias=False)
         self.head1_write_head = nn.Linear(config.n_embd, config.write_vocab_size, bias=False)
-        self.done_head = nn.Linear(config.n_embd, config.done_vocab_size, bias=False)
 
         self.apply(self._init_weights)
         for module in self.modules():
@@ -204,14 +199,13 @@ class GPT(nn.Module):
 
     def _build_input(self, reads, prev_actions, latent):
         assert reads.size(-1) == 2
-        assert prev_actions.size(-1) == 5
+        assert prev_actions.size(-1) == 4
         head0_read_x = self.read_emb(reads[..., 0])
         head1_read_x = self.read_emb(reads[..., 1])
         head0_move_x = self.move_emb(prev_actions[..., 0])
         head1_move_x = self.move_emb(prev_actions[..., 1])
         head0_write_x = self.write_emb(prev_actions[..., 2])
         head1_write_x = self.write_emb(prev_actions[..., 3])
-        done_x = self.done_emb(prev_actions[..., 4])
         if latent is None:
             latent = head0_read_x.new_zeros(*head0_read_x.shape[:-1], self.config.n_embd)
         assert latent.shape == (*head0_read_x.shape[:-1], self.config.n_embd)
@@ -222,7 +216,6 @@ class GPT(nn.Module):
             head1_move_x,
             head0_write_x,
             head1_write_x,
-            done_x,
             latent.to(dtype=head0_read_x.dtype),
         ], dim=-1))
 
@@ -240,6 +233,5 @@ class GPT(nn.Module):
             self.head1_move_head(self.head1_move_ln(self.head1_move_mlp(x))),
             self.head0_write_head(self.head0_write_ln(self.head0_write_mlp(x))),
             self.head1_write_head(self.head1_write_ln(self.head1_write_mlp(x))),
-            self.done_head(self.done_ln(self.done_mlp(x))),
         )
         return logits, latent_out, new_states

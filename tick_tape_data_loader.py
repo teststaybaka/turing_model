@@ -2,7 +2,8 @@
 
 Each training row is one machine tick. There is no READ action: both heads read
 from the same tape on every tick. The supervised target is factorized into
-per-head moves, per-head writes, and a done flag.
+per-head moves and per-head writes. There is no explicit done flag: the sequence
+simply ends (the last tick is a STAY/NOOP) and everything after is padding.
 
 Initial tape layout for copy/mirror/reverse:
   [TASK] chars... [END] blanks...
@@ -57,14 +58,6 @@ WRITE_CHAR_BASE = 10
 WRITE_VOCAB_SIZE = WRITE_CHAR_BASE + len(SYMBOLS)
 
 
-# --- Done target vocabulary --------------------------------------------------
-DONE_PAD = 0
-DONE_START = 1
-DONE_NO = 2
-DONE_YES = 3
-DONE_VOCAB_SIZE = 4
-
-
 READ_TOKEN_NAMES = {
     READ_PAD: "[PAD]",
     READ_BLANK: "[BLANK]",
@@ -93,12 +86,6 @@ WRITE_TOKEN_NAMES = {
     WRITE_REVERSE: "[WRITE_REVERSE]",
     WRITE_SEP: "[WRITE_SEP]",
     WRITE_END: "[WRITE_END]",
-}
-DONE_TOKEN_NAMES = {
-    DONE_PAD: "[PAD]",
-    DONE_START: "[START]",
-    DONE_NO: "[NOT_DONE]",
-    DONE_YES: "[DONE]",
 }
 for i, c in enumerate(SYMBOLS):
     READ_TOKEN_NAMES[READ_CHAR_BASE + i] = f"[{c}]"
@@ -144,7 +131,6 @@ class TickTrajectory:
     target_head1_moves: list[int]
     target_head0_writes: list[int]
     target_head1_writes: list[int]
-    target_done: list[int]
     final_output: str
 
     @property
@@ -163,10 +149,6 @@ class TickTrajectory:
     def prev_head1_writes(self):
         return [WRITE_START] + self.target_head1_writes[:-1]
 
-    @property
-    def prev_done(self):
-        return [DONE_START] + self.target_done[:-1]
-
 
 class _Program:
     def __init__(self):
@@ -176,7 +158,6 @@ class _Program:
         self.head1_moves = []
         self.head0_writes = []
         self.head1_writes = []
-        self.done = []
 
     def step(
         self,
@@ -184,13 +165,11 @@ class _Program:
         head1_move=MOVE_STAY,
         head0_write=WRITE_NOOP,
         head1_write=WRITE_NOOP,
-        done=DONE_NO,
     ):
         self.head0_moves.append(head0_move)
         self.head1_moves.append(head1_move)
         self.head0_writes.append(head0_write)
         self.head1_writes.append(head1_write)
-        self.done.append(done)
         self.head0 += _move_delta(head0_move)
         self.head1 += _move_delta(head1_move)
 
@@ -202,7 +181,9 @@ class _Program:
             )
 
     def finish(self):
-        self.step(done=DONE_YES)
+        # Terminal no-op tick: both heads STAY and NOOP. No done flag — the
+        # sequence just ends here and everything after is padding.
+        self.step()
 
 
 def _move_delta(move):
@@ -245,7 +226,7 @@ def _simulate(task, initial_tape, program, expected_output, output_start=None):
     head0_reads = []
     head1_reads = []
 
-    n = len(program.done)
+    n = len(program.head0_moves)
     for i in range(n):
         head0_reads.append(_read_tape(tape, head0))
         head1_reads.append(_read_tape(tape, head1))
@@ -274,7 +255,6 @@ def _simulate(task, initial_tape, program, expected_output, output_start=None):
         target_head1_moves=list(program.head1_moves),
         target_head0_writes=list(program.head0_writes),
         target_head1_writes=list(program.head1_writes),
-        target_done=list(program.done),
         final_output="".join(final_output),
     )
 
@@ -421,7 +401,7 @@ class TickTaskDataLoader:
     def _collate(self, batch):
         import torch
 
-        seq_len = max(len(t.target_done) for t in batch)
+        seq_len = max(len(t.target_head0_moves) for t in batch)
         padded_len = ((seq_len + self.pad_to_multiple - 1) // self.pad_to_multiple) * self.pad_to_multiple
 
         head0_reads = []
@@ -430,16 +410,14 @@ class TickTaskDataLoader:
         prev_head1_moves = []
         prev_head0_writes = []
         prev_head1_writes = []
-        prev_done = []
         target_head0_moves = []
         target_head1_moves = []
         target_head0_writes = []
         target_head1_writes = []
-        target_done = []
         loss_mask = []
 
         for traj in batch:
-            n = len(traj.target_done)
+            n = len(traj.target_head0_moves)
             pad_len = padded_len - n
             head0_reads.append(traj.head0_reads + [READ_PAD] * pad_len)
             head1_reads.append(traj.head1_reads + [READ_PAD] * pad_len)
@@ -447,12 +425,10 @@ class TickTaskDataLoader:
             prev_head1_moves.append(traj.prev_head1_moves + [MOVE_PAD] * pad_len)
             prev_head0_writes.append(traj.prev_head0_writes + [WRITE_PAD] * pad_len)
             prev_head1_writes.append(traj.prev_head1_writes + [WRITE_PAD] * pad_len)
-            prev_done.append(traj.prev_done + [DONE_PAD] * pad_len)
             target_head0_moves.append(traj.target_head0_moves + [MOVE_PAD] * pad_len)
             target_head1_moves.append(traj.target_head1_moves + [MOVE_PAD] * pad_len)
             target_head0_writes.append(traj.target_head0_writes + [WRITE_PAD] * pad_len)
             target_head1_writes.append(traj.target_head1_writes + [WRITE_PAD] * pad_len)
-            target_done.append(traj.target_done + [DONE_PAD] * pad_len)
             loss_mask.append([1] * n + [0] * pad_len)
 
         while len(head0_reads) < self.batch_size:
@@ -462,12 +438,10 @@ class TickTaskDataLoader:
             prev_head1_moves.append([MOVE_PAD] * padded_len)
             prev_head0_writes.append([WRITE_PAD] * padded_len)
             prev_head1_writes.append([WRITE_PAD] * padded_len)
-            prev_done.append([DONE_PAD] * padded_len)
             target_head0_moves.append([MOVE_PAD] * padded_len)
             target_head1_moves.append([MOVE_PAD] * padded_len)
             target_head0_writes.append([WRITE_PAD] * padded_len)
             target_head1_writes.append([WRITE_PAD] * padded_len)
-            target_done.append([DONE_PAD] * padded_len)
             loss_mask.append([0] * padded_len)
 
         return (
@@ -477,12 +451,10 @@ class TickTaskDataLoader:
             torch.tensor(prev_head1_moves, dtype=torch.long),
             torch.tensor(prev_head0_writes, dtype=torch.long),
             torch.tensor(prev_head1_writes, dtype=torch.long),
-            torch.tensor(prev_done, dtype=torch.long),
             torch.tensor(target_head0_moves, dtype=torch.long),
             torch.tensor(target_head1_moves, dtype=torch.long),
             torch.tensor(target_head0_writes, dtype=torch.long),
             torch.tensor(target_head1_writes, dtype=torch.long),
-            torch.tensor(target_done, dtype=torch.long),
             torch.tensor(loss_mask, dtype=torch.float32),
         )
 
@@ -492,11 +464,10 @@ class TickTaskDataLoader:
 
 if __name__ == "__main__":
     for traj in [generate_copy("abc"), generate_mirror("abc"), generate_recall("abc"), generate_reverse("abc")]:
-        print(traj.task, traj.final_output, len(traj.target_done))
+        print(traj.task, traj.final_output, len(traj.target_head0_moves))
         print("h0 reads", [READ_TOKEN_NAMES[x] for x in traj.head0_reads])
         print("h0 moves", [MOVE_TOKEN_NAMES[x] for x in traj.target_head0_moves])
         print("h0 writes", [WRITE_TOKEN_NAMES[x] for x in traj.target_head0_writes])
         print("h1 reads", [READ_TOKEN_NAMES[x] for x in traj.head1_reads])
         print("h1 moves", [MOVE_TOKEN_NAMES[x] for x in traj.target_head1_moves])
         print("h1 writes", [WRITE_TOKEN_NAMES[x] for x in traj.target_head1_writes])
-        print("done", [DONE_TOKEN_NAMES[x] for x in traj.target_done])

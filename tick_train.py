@@ -20,7 +20,6 @@ from tick_tape_data_loader import (
     READ_VOCAB_SIZE,
     MOVE_VOCAB_SIZE,
     WRITE_VOCAB_SIZE,
-    DONE_VOCAB_SIZE,
 )
 from tick_mamba3_model import GPT, GPTConfig
 
@@ -42,7 +41,6 @@ config = GPTConfig(
     read_vocab_size=READ_VOCAB_SIZE,
     move_vocab_size=MOVE_VOCAB_SIZE,
     write_vocab_size=WRITE_VOCAB_SIZE,
-    done_vocab_size=DONE_VOCAB_SIZE,
     token_embd=32,
     n_layers=4,
     n_heads=4,
@@ -99,12 +97,10 @@ def unpack_batch(batch, device):
         prev_head1_moves,
         prev_head0_writes,
         prev_head1_writes,
-        prev_done,
         target_head0_moves,
         target_head1_moves,
         target_head0_writes,
         target_head1_writes,
-        target_done,
         loss_mask,
     ) = [x.to(device) for x in batch]
 
@@ -114,14 +110,12 @@ def unpack_batch(batch, device):
         prev_head1_moves,
         prev_head0_writes,
         prev_head1_writes,
-        prev_done,
     ), dim=-1)
     targets = (
         target_head0_moves,
         target_head1_moves,
         target_head0_writes,
         target_head1_writes,
-        target_done,
     )
     return reads, prev_actions, targets, loss_mask
 
