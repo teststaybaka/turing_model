@@ -1,4 +1,4 @@
-"""Supervised tick-level Turing-machine training with Mamba-3.
+"""Supervised arithmetic tick-level Turing-machine training with Mamba-3.
 
 There is no READ action. At each tick the model observes both tape heads, the
 previous factorized actions, and the previous latent output, then predicts the
@@ -11,12 +11,15 @@ import math
 import torch
 import torch.nn.functional as F
 
-from tick_tape_data_loader import (
-    TickTaskDataset,
-    TickTaskDataLoader,
-    TRAIN_STRINGS,
-    VAL_STRINGS,
-    TEST_LONG_STRINGS,
+from tick_arith_data_loader import (
+    ArithmeticTickDataset,
+    ArithmeticTickDataLoader,
+    TRAIN_ADD,
+    VAL_ADD,
+    TEST_LONG_ADD,
+    TRAIN_MUL,
+    VAL_MUL,
+    TEST_LONG_MUL,
     READ_VOCAB_SIZE,
     MOVE_VOCAB_SIZE,
     WRITE_VOCAB_SIZE,
@@ -30,7 +33,7 @@ EVAL_INTERVAL = 50
 DEVICE = "cuda"
 COMPILE = True
 DETACH_LATENT = False
-TASKS = ["copy", "mirror", "recall", "reverse"]
+TASKS = ["add", "mul"]
 
 max_lr = 3e-4
 min_lr = max_lr * 0.1
@@ -49,7 +52,7 @@ config = GPTConfig(
 
 log_dir = "log"
 os.makedirs(log_dir, exist_ok=True)
-log_file = os.path.join(log_dir, "tick_mamba3_log.txt")
+log_file = os.path.join(log_dir, "tick_arith_mamba3_log.txt")
 
 
 def get_lr(step, total_steps):
@@ -202,13 +205,40 @@ def train():
         torch.cuda.manual_seed(42)
     torch.set_float32_matmul_precision("high")
 
-    train_dataset = TickTaskDataset(TRAIN_STRINGS, tasks=TASKS)
-    val_dataset = TickTaskDataset(VAL_STRINGS, tasks=TASKS)
-    test_dataset = TickTaskDataset(TEST_LONG_STRINGS, tasks=TASKS)
+    train_dataset = ArithmeticTickDataset(
+        add_items=TRAIN_ADD,
+        mul_items=TRAIN_MUL,
+        tasks=TASKS,
+    )
+    val_dataset = ArithmeticTickDataset(
+        add_items=VAL_ADD,
+        mul_items=VAL_MUL,
+        tasks=TASKS,
+    )
+    test_dataset = ArithmeticTickDataset(
+        add_items=TEST_LONG_ADD,
+        mul_items=TEST_LONG_MUL,
+        tasks=TASKS,
+    )
 
-    train_loader = TickTaskDataLoader(train_dataset, batch_size=MICRO_BATCH_SIZE, pad_to_multiple=config.block_size, shuffle=True)
-    val_loader = TickTaskDataLoader(val_dataset, batch_size=MICRO_BATCH_SIZE, pad_to_multiple=config.block_size, shuffle=False)
-    test_loader = TickTaskDataLoader(test_dataset, batch_size=MICRO_BATCH_SIZE, pad_to_multiple=config.block_size, shuffle=False)
+    train_loader = ArithmeticTickDataLoader(
+        train_dataset,
+        batch_size=MICRO_BATCH_SIZE,
+        pad_to_multiple=config.block_size,
+        shuffle=True,
+    )
+    val_loader = ArithmeticTickDataLoader(
+        val_dataset,
+        batch_size=MICRO_BATCH_SIZE,
+        pad_to_multiple=config.block_size,
+        shuffle=False,
+    )
+    test_loader = ArithmeticTickDataLoader(
+        test_dataset,
+        batch_size=MICRO_BATCH_SIZE,
+        pad_to_multiple=config.block_size,
+        shuffle=False,
+    )
     total_steps = len(train_loader) // GRAD_ACCUM_STEPS
 
     model = GPT(config).to(DEVICE)
@@ -269,8 +299,9 @@ def train():
         f.write(f"final val {val_loss:.4f} acc {val_acc:.4f}\n")
         f.write(f"final test {test_loss:.4f} acc {test_acc:.4f}\n")
 
-    torch.save({"model": raw_model.state_dict(), "config": config}, "log/tick_mamba3_model.pt")
-    print("Saved model to log/tick_mamba3_model.pt")
+    checkpoint_path = "log/tick_arith_mamba3_model.pt"
+    torch.save({"model": raw_model.state_dict(), "config": config}, checkpoint_path)
+    print(f"Saved model to {checkpoint_path}")
 
 
 if __name__ == "__main__":
