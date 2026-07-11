@@ -288,16 +288,15 @@ def _copy_paired_scratch_to_output_with_head1(
     answer,
 ):
     program.move_heads_to(output_start, scratch_start)
-    for index, digit in enumerate(answer):
-        has_next = index + 1 < len(answer)
+    for digit in answer:
         program.step(
             head0_move=MOVE_RIGHT,
-            head1_move=MOVE_RIGHT if has_next else MOVE_STAY,
+            head1_move=MOVE_RIGHT,
             head0_write=write_digit(digit),
         )
-        if has_next:
-            # Skip the carry cell and land on the next main digit.
-            program.step(head1_move=MOVE_RIGHT)
+        # Skip the carry cell. After the last digit this walk continues onto
+        # [ADD], whose read is the tape-visible halt signal.
+        program.step(head1_move=MOVE_RIGHT)
 
 
 def _run_move_scripts(program, head0_moves, head1_moves, head1_writes=None):
@@ -340,20 +339,24 @@ def generate_add(a, b):
     program.move_heads_to(sep_pos, 0)
     program.step(head1_move=MOVE_LEFT)
     program.step(head0_move=MOVE_LEFT, head1_move=MOVE_LEFT)
-    for column, digit in enumerate(reversed(a)):
-        has_next = column + 1 < len(a)
+    for digit in reversed(a):
+        # Same-tick echo into the main cell, leaving the carry cell blank.
+        # Head 0 slides one digit left per pair; reading [ADD] ends the copy.
         program.step(
-            head0_move=MOVE_LEFT if has_next else MOVE_STAY,
-            head1_move=MOVE_LEFT if has_next else MOVE_STAY,
+            head0_move=MOVE_LEFT,
+            head1_move=MOVE_LEFT,
             head1_write=write_digit(digit),
         )
-        if has_next:
-            # Leave the carry cell blank and continue to the next main cell.
-            program.step(head1_move=MOVE_LEFT)
+        program.step(head1_move=MOVE_LEFT)
 
     # Head 0 discovers b's right boundary by reading [END], then steps left
-    # onto b's LSD while head 1 waits on the copied a's LSD.
-    program.move_heads_to(end_pos, main_pos(0))
+    # onto b's LSD. Head 1 walks right until it reads [ADD] and backs up two
+    # cells onto the copied a's LSD.
+    _run_move_scripts(
+        program,
+        [MOVE_RIGHT] * end_pos,
+        [MOVE_RIGHT] * -program.head1 + [MOVE_LEFT] * 2,
+    )
     program.step(head0_move=MOVE_LEFT)
 
     carry = 0
@@ -390,8 +393,11 @@ def generate_add(a, b):
 
             # Read back the explicit outgoing carry, then cross the current
             # main cell and the next pair's carry cell to reach its main digit.
+            # Head 0 retires the consumed b digit as it leaves, so the later
+            # walk to the output crosses [USED] cells instead of fresh digits.
             program.step(
                 head0_move=_move_toward(program.head0, next_b_pos),
+                head0_write=WRITE_USED if b_index >= 0 else WRITE_NOOP,
                 head1_move=MOVE_LEFT,
             )
             program.step(head1_move=MOVE_LEFT)
@@ -454,13 +460,17 @@ def generate_mul(a, b):
         # Same-tick echo: retire b_j on the input side and seed this row's WIP.
         program.step(head0_write=WRITE_USED, head1_write=write_digit(b_digit))
 
-        # Head 1 explicitly rereads b_j, marks the starting WIP as the row
-        # landmark, and reaches MAIN. Head 0 aligns with a's LSD in parallel.
+        # Head 1 keeps rereading b_j on the WIP cell until head 0 reads [SEP]
+        # on its last transit tick; only then does it mark the starting WIP as
+        # the row landmark, materialize the zero carry-in, and reach MAIN, two
+        # ticks after head 0 parks on a's LSD. This keeps b_j at most three
+        # ticks old at the first MAC regardless of how far head 0 travels.
+        n_wait = b_pos - len(a) - 1
         _run_move_scripts(
             program,
             [MOVE_LEFT] * (b_pos - len(a)),
-            [MOVE_LEFT, MOVE_STAY, MOVE_LEFT],
-            [WRITE_USED, write_digit(0), WRITE_NOOP],
+            [MOVE_STAY] * n_wait + [MOVE_LEFT, MOVE_STAY, MOVE_LEFT],
+            [WRITE_NOOP] * n_wait + [WRITE_USED, write_digit(0), WRITE_NOOP],
         )
         if program.head0 != len(a) or program.head1 != main_pos(shift):
             raise AssertionError("multiplication row did not align on its LSD")
@@ -544,21 +554,24 @@ def generate_mul(a, b):
     head1_moves += [MOVE_RIGHT, MOVE_RIGHT, MOVE_RIGHT] * (
         full_width - len(answer)
     )
+    if answer == "0":
+        # A lone zero MAIN looks exactly like another leading zero to skip;
+        # overshoot onto [MUL] and back up so the stop is tape-triggered.
+        head1_moves += [MOVE_RIGHT] * 3 + [MOVE_LEFT] * 3
     _run_move_scripts(program, head0_moves, head1_moves)
     if program.head0 != output_start or program.head1 != main_pos(len(answer) - 1):
         raise AssertionError("copy walks missed the output start or the MSD")
 
-    # Copy MAIN cells only, skipping each CARRY and WIP cell.
-    for index, digit in enumerate(answer):
-        has_next = index + 1 < len(answer)
+    # Copy MAIN cells only, skipping each CARRY and WIP cell. After the last
+    # digit the skip walk lands on [MUL], the tape-visible halt signal.
+    for digit in answer:
         program.step(
             head0_move=MOVE_RIGHT,
-            head1_move=MOVE_RIGHT if has_next else MOVE_STAY,
+            head1_move=MOVE_RIGHT,
             head0_write=write_digit(digit),
         )
-        if has_next:
-            program.step(head1_move=MOVE_RIGHT)
-            program.step(head1_move=MOVE_RIGHT)
+        program.step(head1_move=MOVE_RIGHT)
+        program.step(head1_move=MOVE_RIGHT)
 
     program.finish()
     return _simulate("mul", initial_tape, program, answer)

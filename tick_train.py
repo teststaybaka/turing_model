@@ -1,8 +1,11 @@
 """Supervised arithmetic tick-level Turing-machine training with Mamba-3.
 
 There is no READ action. At each tick the model observes both tape heads, the
-previous factorized actions, and the previous latent output, then predicts the
-next factorized actions.
+previous factorized actions, and a latent input, then predicts the next
+factorized actions. With DETACH_LATENT the latent input is undifferentiable
+random noise (which the model learns to ignore), so sequences run in parallel
+block_size chunks with recurrent-state carry, like train.py; otherwise each
+tick's latent output feeds the next tick's input recurrently.
 """
 
 import os
@@ -32,7 +35,10 @@ GRAD_ACCUM_STEPS = 1
 EVAL_INTERVAL = 50
 DEVICE = "cuda"
 COMPILE = True
-DETACH_LATENT = False
+# True: parallel training in block_size chunks with state carry — the latent
+# input is undifferentiable random noise and the latent output is discarded.
+# False: per-tick recurrence with exact latent feedback.
+DETACH_LATENT = True
 TASKS = ["add", "mul"]
 
 max_lr = 3e-4
@@ -131,6 +137,36 @@ def factorized_loss(logits, targets, mask):
     return sum(losses) / len(losses)
 
 
+def forward_chunked(model, reads, prev_actions, targets, loss_mask, chunk_size):
+    """Process a sequence in chunks with state carry (BPTT — no detach).
+
+    The latent input is undifferentiable random noise, so ticks within a chunk
+    need no latent feedback and run as one parallel forward."""
+    B, T = loss_mask.size()
+    states = None
+    total_loss = torch.tensor(0.0, device=loss_mask.device)
+    total_masked = 0
+
+    for start in range(0, T, chunk_size):
+        end = min(start + chunk_size, T)
+        latent = torch.randn(B, end - start, config.n_embd, device=loss_mask.device)
+        logits, _, states = model(
+            reads[:, start:end].contiguous(),
+            prev_actions[:, start:end].contiguous(),
+            latent=latent,
+            states=states,
+        )
+        chunk_mask = loss_mask[:, start:end].contiguous()
+        n_masked = chunk_mask.sum().item()
+        if n_masked > 0:
+            chunk_targets = tuple(t[:, start:end].contiguous() for t in targets)
+            chunk_loss = factorized_loss(logits, chunk_targets, chunk_mask)
+            total_loss = total_loss + chunk_loss * n_masked
+            total_masked += n_masked
+
+    return total_loss / total_masked if total_masked > 0 else total_loss
+
+
 def forward_recurrent(model, reads, prev_actions, targets, loss_mask):
     _, T = loss_mask.size()
     states = None
@@ -145,9 +181,6 @@ def forward_recurrent(model, reads, prev_actions, targets, loss_mask):
             latent=latent,
             states=states,
         )
-        if DETACH_LATENT:
-            latent = latent.detach()
-
         token_mask = loss_mask[:, pos:pos + 1].contiguous()
         n_masked = token_mask.sum().item()
         if n_masked > 0:
@@ -168,24 +201,38 @@ def evaluate(model, loader):
     with torch.no_grad():
         for batch in loader:
             reads, prev_actions, targets, loss_mask = unpack_batch(batch, DEVICE)
-            _, T = loss_mask.size()
-            states = None
-            latent = None
-            all_logits = [[] for _ in targets]
-
-            for pos in range(T):
-                logits, latent, states = model(
-                    reads[:, pos:pos + 1].contiguous(),
-                    prev_actions[:, pos:pos + 1].contiguous(),
-                    latent=latent,
-                    states=states,
-                )
-                if DETACH_LATENT:
-                    latent = latent.detach()
-                for i, logit in enumerate(logits):
-                    all_logits[i].append(logit)
-
-            all_logits = tuple(torch.cat(parts, dim=1) for parts in all_logits)
+            B, T = loss_mask.size()
+            if DETACH_LATENT:
+                states = None
+                parts = [[] for _ in targets]
+                for start in range(0, T, config.block_size):
+                    end = min(start + config.block_size, T)
+                    latent = torch.randn(
+                        B, end - start, config.n_embd, device=loss_mask.device
+                    )
+                    logits, _, states = model(
+                        reads[:, start:end].contiguous(),
+                        prev_actions[:, start:end].contiguous(),
+                        latent=latent,
+                        states=states,
+                    )
+                    for i, logit in enumerate(logits):
+                        parts[i].append(logit)
+                all_logits = tuple(torch.cat(p, dim=1) for p in parts)
+            else:
+                states = None
+                latent = None
+                parts = [[] for _ in targets]
+                for pos in range(T):
+                    logits, latent, states = model(
+                        reads[:, pos:pos + 1].contiguous(),
+                        prev_actions[:, pos:pos + 1].contiguous(),
+                        latent=latent,
+                        states=states,
+                    )
+                    for i, logit in enumerate(logits):
+                        parts[i].append(logit)
+                all_logits = tuple(torch.cat(p, dim=1) for p in parts)
             batch_loss = factorized_loss(all_logits, targets, loss_mask)
             n_tokens = loss_mask.sum().item()
             total_loss += batch_loss.item() * n_tokens
@@ -281,7 +328,12 @@ def train():
         for _ in range(GRAD_ACCUM_STEPS):
             batch = next(batch_iter)
             reads, prev_actions, targets, loss_mask = unpack_batch(batch, DEVICE)
-            loss = forward_recurrent(model, reads, prev_actions, targets, loss_mask)
+            if DETACH_LATENT:
+                loss = forward_chunked(
+                    model, reads, prev_actions, targets, loss_mask, config.block_size
+                )
+            else:
+                loss = forward_recurrent(model, reads, prev_actions, targets, loss_mask)
             loss = loss / GRAD_ACCUM_STEPS
             loss.backward()
             loss_accum += loss.detach()
