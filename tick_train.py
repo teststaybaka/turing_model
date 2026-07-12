@@ -2,10 +2,14 @@
 
 There is no READ action. At each tick the model observes both tape heads, the
 previous factorized actions, and a latent input, then predicts the next
-factorized actions. With DETACH_LATENT the latent input is undifferentiable
-random noise (which the model learns to ignore), so sequences run in parallel
-block_size chunks with recurrent-state carry, like train.py; otherwise each
-tick's latent output feeds the next tick's input recurrently.
+factorized actions. With DETACH_LATENT the latent input is all zeros (no
+latent feedback at all), so sequences run in parallel block_size chunks with
+recurrent-state carry, like train.py; otherwise each tick's latent output
+feeds the next tick's input recurrently.
+
+With CURRICULUM the training data is served in stages of increasing
+difficulty (add short to long, then mul short to long, then the full mix)
+instead of one uniformly shuffled dataset.
 """
 
 import os
@@ -17,6 +21,7 @@ import torch.nn.functional as F
 from tick_arith_data_loader import (
     ArithmeticTickDataset,
     ArithmeticTickDataLoader,
+    curriculum_dataset,
     TRAIN_ADD,
     VAL_ADD,
     TEST_LONG_ADD,
@@ -36,9 +41,10 @@ EVAL_INTERVAL = 50
 DEVICE = "cuda"
 COMPILE = True
 # True: parallel training in block_size chunks with state carry — the latent
-# input is undifferentiable random noise and the latent output is discarded.
+# input is all zeros and the latent output is discarded.
 # False: per-tick recurrence with exact latent feedback.
 DETACH_LATENT = True
+CURRICULUM = True
 TASKS = ["add", "mul"]
 
 max_lr = 3e-4
@@ -140,8 +146,8 @@ def factorized_loss(logits, targets, mask):
 def forward_chunked(model, reads, prev_actions, targets, loss_mask, chunk_size):
     """Process a sequence in chunks with state carry (BPTT — no detach).
 
-    The latent input is undifferentiable random noise, so ticks within a chunk
-    need no latent feedback and run as one parallel forward."""
+    The latent input is all zeros, so ticks within a chunk need no latent
+    feedback and run as one parallel forward."""
     B, T = loss_mask.size()
     states = None
     total_loss = torch.tensor(0.0, device=loss_mask.device)
@@ -149,11 +155,10 @@ def forward_chunked(model, reads, prev_actions, targets, loss_mask, chunk_size):
 
     for start in range(0, T, chunk_size):
         end = min(start + chunk_size, T)
-        latent = torch.randn(B, end - start, config.n_embd, device=loss_mask.device)
         logits, _, states = model(
             reads[:, start:end].contiguous(),
             prev_actions[:, start:end].contiguous(),
-            latent=latent,
+            latent=None,
             states=states,
         )
         chunk_mask = loss_mask[:, start:end].contiguous()
@@ -207,13 +212,10 @@ def evaluate(model, loader):
                 parts = [[] for _ in targets]
                 for start in range(0, T, config.block_size):
                     end = min(start + config.block_size, T)
-                    latent = torch.randn(
-                        B, end - start, config.n_embd, device=loss_mask.device
-                    )
                     logits, _, states = model(
                         reads[:, start:end].contiguous(),
                         prev_actions[:, start:end].contiguous(),
-                        latent=latent,
+                        latent=None,
                         states=states,
                     )
                     for i, logit in enumerate(logits):
@@ -252,11 +254,15 @@ def train():
         torch.cuda.manual_seed(42)
     torch.set_float32_matmul_precision("high")
 
-    train_dataset = ArithmeticTickDataset(
-        add_items=TRAIN_ADD,
-        mul_items=TRAIN_MUL,
-        tasks=TASKS,
-    )
+    if CURRICULUM:
+        train_dataset = curriculum_dataset()
+    else:
+        train_dataset = ArithmeticTickDataset(
+            add_items=TRAIN_ADD,
+            mul_items=TRAIN_MUL,
+            tasks=TASKS,
+            shuffle_seed=42,
+        )
     val_dataset = ArithmeticTickDataset(
         add_items=VAL_ADD,
         mul_items=VAL_MUL,
@@ -272,19 +278,16 @@ def train():
         train_dataset,
         batch_size=MICRO_BATCH_SIZE,
         pad_to_multiple=config.block_size,
-        shuffle=True,
     )
     val_loader = ArithmeticTickDataLoader(
         val_dataset,
         batch_size=MICRO_BATCH_SIZE,
         pad_to_multiple=config.block_size,
-        shuffle=False,
     )
     test_loader = ArithmeticTickDataLoader(
         test_dataset,
         batch_size=MICRO_BATCH_SIZE,
         pad_to_multiple=config.block_size,
-        shuffle=False,
     )
     total_steps = len(train_loader) // GRAD_ACCUM_STEPS
 
@@ -299,6 +302,7 @@ def train():
     print(f"Tasks: {TASKS}")
     print(f"Compile: {COMPILE}")
     print(f"Detach latent: {DETACH_LATENT}")
+    print(f"Curriculum: {CURRICULUM}")
     print(f"Device: {DEVICE}")
     print(f"Train: {len(train_dataset)} examples")
     print(f"Total optimizer steps: {total_steps}")

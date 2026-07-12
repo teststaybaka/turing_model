@@ -594,13 +594,21 @@ TEST_LONG_MUL = _gen_items(500, 6, 8, seed=457)
 
 
 class ArithmeticTickDataset:
-    def __init__(self, add_items=TRAIN_ADD, mul_items=TRAIN_MUL, tasks=DEFAULT_TASKS):
+    def __init__(
+        self,
+        add_items=TRAIN_ADD,
+        mul_items=TRAIN_MUL,
+        tasks=DEFAULT_TASKS,
+        shuffle_seed=None,
+    ):
         self.items = []
         for task in tasks:
             if task not in TASK_GENERATORS:
                 raise ValueError(f"unknown task {task!r}")
             items = add_items if task == "add" else mul_items
             self.items.extend((task, a, b) for a, b in items)
+        if shuffle_seed is not None:
+            random.Random(shuffle_seed).shuffle(self.items)
 
     def __len__(self):
         return len(self.items)
@@ -610,20 +618,49 @@ class ArithmeticTickDataset:
         return TASK_GENERATORS[task](a, b)
 
 
+# --- Curriculum ---------------------------------------------------------------
+# Stages run in order: add starts at single digits and grows to full length,
+# then mul does the same, and the final stage mixes both ops at the full
+# training ranges. Counts are per-task example counts.
+CURRICULUM_STAGES = [
+    (["add"], (1, 1), None, 5000),
+    (["add"], (1, 2), None, 10000),
+    (["add"], (1, 4), None, 15000),
+    (["add"], (1, 8), None, 20000),
+    (["mul"], None, (1, 1), 5000),
+    (["mul"], None, (1, 2), 15000),
+    (["mul"], None, (1, 4), 25000),
+    (["add", "mul"], (1, 8), (1, 4), 100000),
+]
+
+
+def curriculum_dataset(stages=CURRICULUM_STAGES, seed=2000):
+    """One dataset whose items follow the curriculum order: each stage is
+    shuffled internally, stages are concatenated in order."""
+    dataset = ArithmeticTickDataset(add_items=[], mul_items=[])
+    for i, (tasks, add_len, mul_len, n_examples) in enumerate(stages):
+        base = seed + 3 * i
+        add_items = (
+            _gen_items(n_examples, *add_len, seed=base) if "add" in tasks else []
+        )
+        mul_items = (
+            _gen_items(n_examples, *mul_len, seed=base + 1) if "mul" in tasks else []
+        )
+        stage = ArithmeticTickDataset(add_items, mul_items, tasks, shuffle_seed=base + 2)
+        dataset.items.extend(stage.items)
+    return dataset
+
+
 class ArithmeticTickDataLoader:
-    def __init__(self, dataset, batch_size, pad_to_multiple=32, shuffle=True, seed=42):
+    def __init__(self, dataset, batch_size, pad_to_multiple=32):
         self.dataset = dataset
         self.batch_size = batch_size
         self.pad_to_multiple = pad_to_multiple
-        self.shuffle = shuffle
-        self.rng = random.Random(seed)
 
     def __iter__(self):
-        indices = list(range(len(self.dataset)))
-        if self.shuffle:
-            self.rng.shuffle(indices)
-        for start in range(0, len(indices), self.batch_size):
-            batch = [self.dataset[i] for i in indices[start:start + self.batch_size]]
+        for start in range(0, len(self.dataset), self.batch_size):
+            end = min(start + self.batch_size, len(self.dataset))
+            batch = [self.dataset[i] for i in range(start, end)]
             yield self._collate(batch)
 
     def _collate(self, batch):
