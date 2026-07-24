@@ -65,7 +65,7 @@ STAGE2_TRAINING_CYCLES = 100
 STAGE2_ROLLOUTS_PER_CYCLE = 1024
 STAGE2_ROLLOUT_BATCH_SIZE = 128
 STAGE2_REPLAY_BATCH_SIZE = 128
-STAGE2_REPLAY_EPOCHS_PER_CYCLE = 4
+STAGE2_REPLAY_EPOCHS_PER_CYCLE = 2
 STAGE2_EVAL_INTERVAL_CYCLES = 5
 STAGE2_LR = 1e-4
 STAGE2_VALUE_COEF = 0.5
@@ -359,6 +359,12 @@ def train_stage1(model, eval_model, optimizer):
                 f"factor_acc {validation['factor_acc']:.4f} | "
                 f"tick_acc {validation['tick_acc']:.4f}"
             )
+            with open(log_file, "a") as f:
+                f.write(
+                    f"stage1 {step} val nll {validation['nll']:.4f} "
+                    f"factor_acc {validation['factor_acc']:.4f} "
+                    f"tick_acc {validation['tick_acc']:.4f}\n"
+                )
 
         learning_rate = stage1_lr(step, total_steps)
         for group in optimizer.param_groups:
@@ -412,6 +418,17 @@ def train_stage1(model, eval_model, optimizer):
         f"factor_acc {test['factor_acc']:.4f} | "
         f"tick_acc {test['tick_acc']:.4f}"
     )
+    with open(log_file, "a") as f:
+        f.write(
+            f"stage1 final val nll {validation['nll']:.4f} "
+            f"factor_acc {validation['factor_acc']:.4f} "
+            f"tick_acc {validation['tick_acc']:.4f}\n"
+        )
+        f.write(
+            f"stage1 final test nll {test['nll']:.4f} "
+            f"factor_acc {test['factor_acc']:.4f} "
+            f"tick_acc {test['tick_acc']:.4f}\n"
+        )
 
 
 def valid_action_logits(logits):
@@ -756,20 +773,42 @@ def replay_trajectory_batch(model, optimizer, trajectories):
     }
 
 
-def replay_stored_trajectories(model, optimizer, trajectories, rng):
+def replay_stored_trajectories(
+    model,
+    optimizer,
+    trajectories,
+    rng,
+    completed_updates,
+    total_updates,
+):
     totals = None
     total_ticks = 0.0
     updates = 0
     indices = list(range(len(trajectories)))
 
-    for _ in range(STAGE2_REPLAY_EPOCHS_PER_CYCLE):
+    for epoch in range(STAGE2_REPLAY_EPOCHS_PER_CYCLE):
         rng.shuffle(indices)
         for start in range(0, len(indices), STAGE2_REPLAY_BATCH_SIZE):
             batch = [
                 trajectories[index]
                 for index in indices[start : start + STAGE2_REPLAY_BATCH_SIZE]
             ]
+            update_start = time.time()
             metrics = replay_trajectory_batch(model, optimizer, batch)
+            updates += 1
+            print(
+                f"stage2 step {completed_updates + updates:4d}/"
+                f"{total_updates} | "
+                f"epoch {epoch + 1}/{STAGE2_REPLAY_EPOCHS_PER_CYCLE} | "
+                f"loss {metrics['loss']:.4f} | "
+                f"policy {metrics['policy']:.4f} | "
+                f"value {metrics['value']:.4f} | "
+                f"reward {metrics['reward']:+.4f} | "
+                f"entropy {metrics['entropy']:.4f} | "
+                f"norm {metrics['gradient_norm']:.4f} | "
+                f"lr {optimizer.param_groups[0]['lr']:.2e} | "
+                f"dt {time.time() - update_start:.2f}s"
+            )
             ticks = float(metrics.pop("ticks").item())
             if totals is None:
                 totals = {
@@ -780,7 +819,6 @@ def replay_stored_trajectories(model, optimizer, trajectories, rng):
                 for name, value in metrics.items():
                     totals[name] += float(value.item()) * ticks
             total_ticks += ticks
-            updates += 1
 
     result = {
         name: total / max(total_ticks, 1.0)
@@ -845,6 +883,14 @@ def train_stage2(compiled_model, raw_model, optimizer):
         [("add", a, b) for a, b in VAL_ADD[:32]]
         + [("mul", a, b) for a, b in VAL_MUL[:32]]
     )
+    updates_per_cycle = (
+        math.ceil(
+            STAGE2_ROLLOUTS_PER_CYCLE / STAGE2_REPLAY_BATCH_SIZE
+        )
+        * STAGE2_REPLAY_EPOCHS_PER_CYCLE
+    )
+    total_updates = STAGE2_TRAINING_CYCLES * updates_per_cycle
+    completed_updates = 0
 
     for cycle in range(STAGE2_TRAINING_CYCLES):
         if cycle % STAGE2_EVAL_INTERVAL_CYCLES == 0:
@@ -854,13 +900,25 @@ def train_stage2(compiled_model, raw_model, optimizer):
                 f"val_success {validation['success_rate']:.4f} | "
                 f"val_ticks {validation['mean_ticks']:.1f}"
             )
+            with open(log_file, "a") as f:
+                f.write(
+                    f"stage2 {cycle} val "
+                    f"success {validation['success_rate']:.4f} "
+                    f"ticks {validation['mean_ticks']:.1f}\n"
+                )
 
         start_time = time.time()
         trajectories, rollout_metrics = collect_rollout_dataset(raw_model, rng)
         collection_time = time.time() - start_time
         replay_metrics = replay_stored_trajectories(
-            compiled_model, optimizer, trajectories, rng
+            compiled_model,
+            optimizer,
+            trajectories,
+            rng,
+            completed_updates,
+            total_updates,
         )
+        completed_updates += replay_metrics["updates"]
         print(
             f"stage2 {cycle + 1:3d}/{STAGE2_TRAINING_CYCLES} | "
             f"loss {replay_metrics['loss']:.4f} | "
@@ -885,6 +943,11 @@ def train_stage2(compiled_model, raw_model, optimizer):
         f"stage2 final test-long | success {test['success_rate']:.4f} | "
         f"ticks {test['mean_ticks']:.1f}"
     )
+    with open(log_file, "a") as f:
+        f.write(
+            f"stage2 final test success {test['success_rate']:.4f} "
+            f"ticks {test['mean_ticks']:.1f}\n"
+        )
 
 
 def main():
