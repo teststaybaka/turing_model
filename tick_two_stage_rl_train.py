@@ -644,17 +644,22 @@ def collect_rollout_dataset(model, rng):
 
 def collate_stored_trajectories(trajectories):
     batch_size = len(trajectories)
-    max_ticks = max(trajectory.num_ticks for trajectory in trajectories)
+    trajectory_ticks = max(
+        trajectory.num_ticks for trajectory in trajectories
+    )
+    padded_ticks = (
+        (trajectory_ticks + config.block_size - 1) // config.block_size
+    ) * config.block_size
     reads = torch.zeros(
-        batch_size, max_ticks, config.num_inputs, dtype=torch.long
+        batch_size, padded_ticks, config.num_inputs, dtype=torch.long
     )
     neutral = torch.tensor(NEUTRAL_ACTION, dtype=torch.long)
     previous_actions = neutral.view(1, 1, -1).repeat(
-        batch_size, max_ticks, 1
+        batch_size, padded_ticks, 1
     )
     proposed_actions = previous_actions.clone()
-    rewards = torch.zeros(batch_size, max_ticks, dtype=torch.float32)
-    mask = torch.zeros(batch_size, max_ticks, dtype=torch.float32)
+    rewards = torch.zeros(batch_size, padded_ticks, dtype=torch.float32)
+    mask = torch.zeros(batch_size, padded_ticks, dtype=torch.float32)
 
     for row, trajectory in enumerate(trajectories):
         ticks = trajectory.num_ticks
@@ -832,7 +837,7 @@ def evaluate_stage2(model, items):
     }
 
 
-def train_stage2(model, eval_model, optimizer):
+def train_stage2(compiled_model, raw_model, optimizer):
     for group in optimizer.param_groups:
         group["lr"] = STAGE2_LR
     rng = random.Random(2026)
@@ -843,7 +848,7 @@ def train_stage2(model, eval_model, optimizer):
 
     for cycle in range(STAGE2_TRAINING_CYCLES):
         if cycle % STAGE2_EVAL_INTERVAL_CYCLES == 0:
-            validation = evaluate_stage2(eval_model, validation_items)
+            validation = evaluate_stage2(raw_model, validation_items)
             print(
                 f"stage2 {cycle:3d}/{STAGE2_TRAINING_CYCLES} | "
                 f"val_success {validation['success_rate']:.4f} | "
@@ -851,10 +856,10 @@ def train_stage2(model, eval_model, optimizer):
             )
 
         start_time = time.time()
-        trajectories, rollout_metrics = collect_rollout_dataset(model, rng)
+        trajectories, rollout_metrics = collect_rollout_dataset(raw_model, rng)
         collection_time = time.time() - start_time
         replay_metrics = replay_stored_trajectories(
-            model, optimizer, trajectories, rng
+            compiled_model, optimizer, trajectories, rng
         )
         print(
             f"stage2 {cycle + 1:3d}/{STAGE2_TRAINING_CYCLES} | "
@@ -875,7 +880,7 @@ def train_stage2(model, eval_model, optimizer):
         [("add", a, b) for a, b in TEST_LONG_ADD[:32]]
         + [("mul", a, b) for a, b in TEST_LONG_MUL[:32]]
     )
-    test = evaluate_stage2(eval_model, test_items)
+    test = evaluate_stage2(raw_model, test_items)
     print(
         f"stage2 final test-long | success {test['success_rate']:.4f} | "
         f"ticks {test['mean_ticks']:.1f}"
