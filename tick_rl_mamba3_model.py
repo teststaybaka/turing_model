@@ -1,10 +1,8 @@
-"""Mamba-3 actor-critic for parallel dense tick-level RL.
+"""Configurable Mamba-3 actor-critic for factorized tick-level RL.
 
-Each tick input is:
-  head reads, previous factorized actions, random latent noise
-
-The actor emits four factorized action policies. The critic emits one value for
-each action factor so moves and writes can receive independent dense rewards.
+Input and output streams are declared as ``(embedding_group, vocab_size)``
+pairs. Streams in the same group share an embedding table, while every output
+stream retains an independent policy projection.
 """
 
 import math
@@ -15,15 +13,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-NUM_ACTION_FACTORS = 4
-
-
 @dataclass
 class GPTConfig:
     block_size: int = 1024
-    read_vocab_size: int = 16
-    move_vocab_size: int = 5
-    write_vocab_size: int = 18
+    input_streams: tuple[tuple[str, int], ...] = (
+        ("read", 16),
+        ("read", 16),
+    )
+    output_streams: tuple[tuple[str, int], ...] = (
+        ("move", 5),
+        ("move", 5),
+        ("write", 18),
+        ("write", 18),
+    )
     token_embd: int = 32
     n_layers: int = 12
     n_heads: int = 12
@@ -31,6 +33,14 @@ class GPTConfig:
     expand: int = 2
     d_state: int = 16
     mimo_rank: int = 1
+
+    @property
+    def num_inputs(self):
+        return len(self.input_streams)
+
+    @property
+    def num_outputs(self):
+        return len(self.output_streams)
 
 
 def _rms_norm(x, weight, eps=1e-5):
@@ -196,43 +206,57 @@ class GPT(nn.Module):
     def __init__(self, config: GPTConfig):
         super().__init__()
         self.config = config
-        self.read_emb = nn.Embedding(config.read_vocab_size, config.token_embd)
-        self.move_emb = nn.Embedding(config.move_vocab_size, config.token_embd)
-        self.write_emb = nn.Embedding(config.write_vocab_size, config.token_embd)
+        if config.num_inputs == 0:
+            raise ValueError("at least one input stream is required")
+        if config.num_outputs == 0:
+            raise ValueError("at least one output stream is required")
+
+        group_vocab_sizes = {}
+        for group, vocab_size in config.input_streams + config.output_streams:
+            if not group or "." in group:
+                raise ValueError(f"invalid embedding group name {group!r}")
+            if vocab_size <= 0:
+                raise ValueError(f"{group!r} has invalid vocab size {vocab_size}")
+            previous_size = group_vocab_sizes.setdefault(group, vocab_size)
+            if previous_size != vocab_size:
+                raise ValueError(
+                    f"embedding group {group!r} uses both {previous_size} "
+                    f"and {vocab_size} tokens"
+                )
+
+        self.stream_embeddings = nn.ModuleDict(
+            {
+                group: nn.Embedding(vocab_size, config.token_embd)
+                for group, vocab_size in group_vocab_sizes.items()
+            }
+        )
         self.input_mlp = SwiGLUProject(
-            6 * config.token_embd + config.n_embd, config.n_embd
+            (config.num_inputs + config.num_outputs) * config.token_embd
+            + config.n_embd,
+            config.n_embd,
         )
         self.h = nn.ModuleList(Block(config) for _ in range(config.n_layers))
         self.ln_f = nn.LayerNorm(config.n_embd)
 
-        self.head0_move_mlp = SwiGLUProject(config.n_embd, config.n_embd)
-        self.head1_move_mlp = SwiGLUProject(config.n_embd, config.n_embd)
-        self.head0_write_mlp = SwiGLUProject(config.n_embd, config.n_embd)
-        self.head1_write_mlp = SwiGLUProject(config.n_embd, config.n_embd)
+        self.policy_mlps = nn.ModuleList(
+            SwiGLUProject(config.n_embd, config.n_embd)
+            for _ in config.output_streams
+        )
+        self.policy_lns = nn.ModuleList(
+            nn.LayerNorm(config.n_embd) for _ in config.output_streams
+        )
+        self.policy_heads = nn.ModuleList(
+            nn.Linear(config.n_embd, vocab_size, bias=False)
+            for _, vocab_size in config.output_streams
+        )
         self.latent_mlp = SwiGLUProject(config.n_embd, config.n_embd)
         self.critic_mlp = SwiGLUProject(config.n_embd, config.n_embd)
 
-        self.head0_move_ln = nn.LayerNorm(config.n_embd)
-        self.head1_move_ln = nn.LayerNorm(config.n_embd)
-        self.head0_write_ln = nn.LayerNorm(config.n_embd)
-        self.head1_write_ln = nn.LayerNorm(config.n_embd)
         self.latent_ln = nn.LayerNorm(config.n_embd)
         self.critic_ln = nn.LayerNorm(config.n_embd)
 
-        self.head0_move_head = nn.Linear(
-            config.n_embd, config.move_vocab_size, bias=False
-        )
-        self.head1_move_head = nn.Linear(
-            config.n_embd, config.move_vocab_size, bias=False
-        )
-        self.head0_write_head = nn.Linear(
-            config.n_embd, config.write_vocab_size, bias=False
-        )
-        self.head1_write_head = nn.Linear(
-            config.n_embd, config.write_vocab_size, bias=False
-        )
         self.critic_head = nn.Linear(
-            config.n_embd, NUM_ACTION_FACTORS, bias=True
+            config.n_embd, config.num_outputs, bias=True
         )
 
         self.apply(self._init_weights)
@@ -249,36 +273,38 @@ class GPT(nn.Module):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
     def _build_input(self, reads, prev_actions, latent):
-        assert reads.size(-1) == 2
-        assert prev_actions.size(-1) == NUM_ACTION_FACTORS
-        head0_read_x = self.read_emb(reads[..., 0])
-        head1_read_x = self.read_emb(reads[..., 1])
-        head0_move_x = self.move_emb(prev_actions[..., 0])
-        head1_move_x = self.move_emb(prev_actions[..., 1])
-        head0_write_x = self.write_emb(prev_actions[..., 2])
-        head1_write_x = self.write_emb(prev_actions[..., 3])
+        if reads.size(-1) != self.config.num_inputs:
+            raise ValueError(
+                f"expected {self.config.num_inputs} input streams, "
+                f"got {reads.size(-1)}"
+            )
+        if prev_actions.size(-1) != self.config.num_outputs:
+            raise ValueError(
+                f"expected {self.config.num_outputs} previous actions, "
+                f"got {prev_actions.size(-1)}"
+            )
+
+        pieces = [
+            self.stream_embeddings[group](reads[..., stream])
+            for stream, (group, _) in enumerate(self.config.input_streams)
+        ]
+        pieces.extend(
+            self.stream_embeddings[group](prev_actions[..., stream])
+            for stream, (group, _) in enumerate(self.config.output_streams)
+        )
+        reference = pieces[0]
         if latent is None:
-            latent = head0_read_x.new_zeros(
-                *head0_read_x.shape[:-1], self.config.n_embd
+            latent = reference.new_zeros(
+                *reference.shape[:-1], self.config.n_embd
             )
-        assert latent.shape == (
-            *head0_read_x.shape[:-1],
-            self.config.n_embd,
-        )
-        return self.input_mlp(
-            torch.cat(
-                [
-                    head0_read_x,
-                    head1_read_x,
-                    head0_move_x,
-                    head1_move_x,
-                    head0_write_x,
-                    head1_write_x,
-                    latent.to(dtype=head0_read_x.dtype),
-                ],
-                dim=-1,
+        expected_latent_shape = (*reference.shape[:-1], self.config.n_embd)
+        if latent.shape != expected_latent_shape:
+            raise ValueError(
+                f"expected latent shape {expected_latent_shape}, "
+                f"got {tuple(latent.shape)}"
             )
-        )
+        pieces.append(latent.to(dtype=reference.dtype))
+        return self.input_mlp(torch.cat(pieces, dim=-1))
 
     def forward(self, reads, prev_actions, latent=None, states=None):
         x = self._build_input(reads, prev_actions, latent)
@@ -289,11 +315,13 @@ class GPT(nn.Module):
             new_states.append(new_state)
         x = self.ln_f(x)
 
-        logits = (
-            self.head0_move_head(self.head0_move_ln(self.head0_move_mlp(x))),
-            self.head1_move_head(self.head1_move_ln(self.head1_move_mlp(x))),
-            self.head0_write_head(self.head0_write_ln(self.head0_write_mlp(x))),
-            self.head1_write_head(self.head1_write_ln(self.head1_write_mlp(x))),
+        logits = tuple(
+            head(norm(mlp(x)))
+            for mlp, norm, head in zip(
+                self.policy_mlps,
+                self.policy_lns,
+                self.policy_heads,
+            )
         )
         values = self.critic_head(self.critic_ln(self.critic_mlp(x)))
         latent_out = self.latent_ln(self.latent_mlp(x))

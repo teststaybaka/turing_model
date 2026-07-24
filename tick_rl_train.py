@@ -27,7 +27,7 @@ from tick_arith_data_loader import (
     VAL_MUL,
     WRITE_VOCAB_SIZE,
 )
-from tick_rl_mamba3_model import GPT, GPTConfig, NUM_ACTION_FACTORS
+from tick_rl_mamba3_model import GPT, GPTConfig
 
 
 MICRO_BATCH_SIZE = 128
@@ -48,9 +48,16 @@ warmup_steps = 30
 
 config = GPTConfig(
     block_size=32,
-    read_vocab_size=READ_VOCAB_SIZE,
-    move_vocab_size=MOVE_VOCAB_SIZE,
-    write_vocab_size=WRITE_VOCAB_SIZE,
+    input_streams=(
+        ("value_read", READ_VOCAB_SIZE),
+        ("value_read", READ_VOCAB_SIZE),
+    ),
+    output_streams=(
+        ("move", MOVE_VOCAB_SIZE),
+        ("move", MOVE_VOCAB_SIZE),
+        ("value_write", WRITE_VOCAB_SIZE),
+        ("value_write", WRITE_VOCAB_SIZE),
+    ),
     token_embd=32,
     n_layers=4,
     n_heads=4,
@@ -143,8 +150,9 @@ def sample_categorical(logits):
 
 def dense_actor_critic_loss(logits, values, targets, loss_mask):
     """One-step factorized actor-critic loss on fixed teacher states."""
-    assert len(logits) == len(targets) == NUM_ACTION_FACTORS
-    assert values.shape == (*loss_mask.shape, NUM_ACTION_FACTORS)
+    num_factors = len(logits)
+    assert len(targets) == num_factors
+    assert values.shape == (*loss_mask.shape, num_factors)
 
     sampled_actions = []
     sampled_log_probs = []
@@ -318,7 +326,7 @@ def evaluate(model, loader):
 
     return {
         "nll": total_nll / total_tokens,
-        "factor_acc": factor_correct / (total_tokens * NUM_ACTION_FACTORS),
+        "factor_acc": factor_correct / (total_tokens * config.num_outputs),
         "tick_acc": tick_correct / total_tokens,
     }
 
