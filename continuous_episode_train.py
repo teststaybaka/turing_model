@@ -657,6 +657,9 @@ def collect_trial_batch(model, items):
     successes = [0] * STAGE2_EPISODES_PER_TRIAL
     ticks = [0] * STAGE2_EPISODES_PER_TRIAL
     success_ticks = [0] * STAGE2_EPISODES_PER_TRIAL
+    tick_records = [
+        [0] * STAGE2_EPISODES_PER_TRIAL for _ in trials
+    ]
     states = None
 
     while any(not trial.done for trial in trials):
@@ -703,6 +706,7 @@ def collect_trial_batch(model, items):
             if episode_done:
                 successes[episode_index] += int(succeeded)
                 ticks[episode_index] += trial.episode_steps
+                tick_records[index][episode_index] = trial.episode_steps
                 if succeeded:
                     success_ticks[episode_index] += trial.episode_steps
 
@@ -745,6 +749,7 @@ def collect_trial_batch(model, items):
         "successes": successes,
         "ticks": ticks,
         "success_ticks": success_ticks,
+        "tick_records": tick_records,
         "counts": [trial_count] * STAGE2_EPISODES_PER_TRIAL,
         "reward": sum(float(t.rewards.sum().item()) for t in trajectories),
         "total_ticks": sum(t.num_ticks for t in trajectories),
@@ -893,6 +898,9 @@ def evaluate_trial_batch(model, items, carry_state):
     successes = [0] * STAGE2_EPISODES_PER_TRIAL
     ticks = [0] * STAGE2_EPISODES_PER_TRIAL
     success_ticks = [0] * STAGE2_EPISODES_PER_TRIAL
+    tick_records = [
+        [0] * STAGE2_EPISODES_PER_TRIAL for _ in trials
+    ]
     states = None
 
     while any(not trial.done for trial in trials):
@@ -948,6 +956,7 @@ def evaluate_trial_batch(model, items, carry_state):
             if episode_done:
                 successes[episode_index] += int(succeeded)
                 ticks[episode_index] += trial.episode_steps
+                tick_records[index][episode_index] = trial.episode_steps
                 if succeeded:
                     success_ticks[episode_index] += trial.episode_steps
                 trial.finish_episode(reward)
@@ -964,25 +973,39 @@ def evaluate_trial_batch(model, items, carry_state):
         "successes": successes,
         "ticks": ticks,
         "success_ticks": success_ticks,
+        "tick_records": tick_records,
         "counts": [len(items)] * STAGE2_EPISODES_PER_TRIAL,
     }
 
 
 def merge_episode_statistics(total, update):
     if total is None:
-        return {
+        merged = {
             name: list(values)
             for name, values in update.items()
             if name in ("successes", "ticks", "success_ticks", "counts")
         }
+        merged["tick_records"] = [
+            list(record) for record in update["tick_records"]
+        ]
+        return merged
     for name in ("successes", "ticks", "success_ticks", "counts"):
         total[name] = [
             old + new for old, new in zip(total[name], update[name])
         ]
+    total["tick_records"].extend(
+        list(record) for record in update["tick_records"]
+    )
     return total
 
 
 def finalize_episode_statistics(statistics):
+    tick_records = statistics["tick_records"]
+    paired_tick_deltas = [
+        sum(record[episode] - record[0] for record in tick_records)
+        / max(len(tick_records), 1)
+        for episode in range(STAGE2_EPISODES_PER_TRIAL)
+    ]
     return {
         "success": [
             successes / max(count, 1)
@@ -1002,6 +1025,7 @@ def finalize_episode_statistics(statistics):
                 statistics["success_ticks"], statistics["successes"]
             )
         ],
+        "paired_tick_delta": paired_tick_deltas,
     }
 
 
@@ -1020,19 +1044,19 @@ def evaluate_trials(model, items, carry_state):
 
 def format_episode_statistics(label, statistics):
     parts = []
-    first_success_ticks = statistics["success_ticks"][0]
-    for episode, (success, ticks, success_ticks) in enumerate(
+    for episode, (success, ticks, success_ticks, paired_delta) in enumerate(
         zip(
             statistics["success"],
             statistics["ticks"],
             statistics["success_ticks"],
+            statistics["paired_tick_delta"],
         ),
         start=1,
     ):
-        delta = success_ticks - first_success_ticks
         parts.append(
             f"e{episode} success {success:.3f} ticks {ticks:.1f} "
-            f"solved_ticks {success_ticks:.1f} delta {delta:+.1f}"
+            f"paired_delta {paired_delta:+.1f} "
+            f"solved_ticks {success_ticks:.1f}"
         )
     return f"{label} | " + " | ".join(parts)
 

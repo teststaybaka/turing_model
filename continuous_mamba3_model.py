@@ -17,8 +17,8 @@ import torch.nn.functional as F
 class GPTConfig:
     block_size: int = 1024
     input_streams: tuple[tuple[str, int], ...] = (
-        ("read", 16),
-        ("read", 16),
+        ("read", 17),
+        ("read", 17),
     )
     action_input_streams: tuple[tuple[str, int], ...] = (
         ("move", 4),
