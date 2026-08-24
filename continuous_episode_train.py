@@ -70,8 +70,8 @@ TASKS = ("add", "mul")
 
 # Stage 1 intentionally stops before driving imitation loss to zero.
 STAGE1_ITEMS_PER_TASK = 50_000
-STAGE1_BATCH_SIZE = 128
-STAGE1_MAX_STEPS = 1_000
+STAGE1_MICRO_BATCH_SIZE = 128
+STAGE1_GRAD_ACCUM_STEPS = 1
 STAGE1_MIN_STEPS = 100
 STAGE1_EVAL_INTERVAL = 25
 STAGE1_STOP_TICK_ACCURACY = 0.995
@@ -160,13 +160,13 @@ def configure_optimizer(model, learning_rate, include_critic):
     )
 
 
-def stage1_learning_rate(step):
+def stage1_learning_rate(step, total_steps):
     if step < STAGE1_WARMUP_STEPS:
         return STAGE1_MAX_LR * (step + 1) / STAGE1_WARMUP_STEPS
-    if step >= STAGE1_MAX_STEPS:
+    if step >= total_steps:
         return STAGE1_MIN_LR
     decay_ratio = (step - STAGE1_WARMUP_STEPS) / max(
-        STAGE1_MAX_STEPS - STAGE1_WARMUP_STEPS, 1
+        total_steps - STAGE1_WARMUP_STEPS, 1
     )
     coefficient = 0.5 * (1.0 + math.cos(math.pi * decay_ratio))
     return STAGE1_MIN_LR + coefficient * (
@@ -329,30 +329,46 @@ def train_stage1(model, evaluation_model):
     train_dataset, validation_dataset, test_dataset = stage1_datasets()
     train_loader = ArithmeticTickDataLoader(
         train_dataset,
-        batch_size=STAGE1_BATCH_SIZE,
+        batch_size=STAGE1_MICRO_BATCH_SIZE,
         pad_to_multiple=config.block_size,
     )
     validation_loader = ArithmeticTickDataLoader(
         validation_dataset,
-        batch_size=STAGE1_BATCH_SIZE,
+        batch_size=STAGE1_MICRO_BATCH_SIZE,
         pad_to_multiple=config.block_size,
     )
     test_loader = ArithmeticTickDataLoader(
         test_dataset,
-        batch_size=STAGE1_BATCH_SIZE,
+        batch_size=STAGE1_MICRO_BATCH_SIZE,
         pad_to_multiple=config.block_size,
     )
+    effective_batch_size = (
+        STAGE1_MICRO_BATCH_SIZE * STAGE1_GRAD_ACCUM_STEPS
+    )
+    total_steps = len(train_dataset) // effective_batch_size
+    if total_steps <= 0:
+        raise ValueError(
+            "stage 1 dataset must contain at least one effective batch"
+        )
     optimizer = configure_optimizer(
         evaluation_model, STAGE1_MAX_LR, include_critic=False
     )
     batches = iter(train_loader)
     completed_steps = 0
 
-    while completed_steps < STAGE1_MAX_STEPS:
+    print(f"Stage 1 train: {len(train_dataset)} examples")
+    print(
+        f"Stage 1 micro batch: {STAGE1_MICRO_BATCH_SIZE}, "
+        f"grad accum: {STAGE1_GRAD_ACCUM_STEPS}, "
+        f"effective batch: {effective_batch_size}"
+    )
+    print(f"Stage 1 optimizer steps: {total_steps}")
+
+    while completed_steps < total_steps:
         if completed_steps % STAGE1_EVAL_INTERVAL == 0:
             validation = evaluate_stage1(evaluation_model, validation_loader)
             message = (
-                f"stage1 {completed_steps:4d}/{STAGE1_MAX_STEPS} val | "
+                f"stage1 {completed_steps:4d}/{total_steps} val | "
                 f"loss {validation['loss']:.4f} | "
                 f"factor_acc {validation['factor_accuracy']:.4f} | "
                 f"tick_acc {validation['tick_accuracy']:.4f}"
@@ -367,46 +383,56 @@ def train_stage1(model, evaluation_model):
                 print("Stage 1 stopped at the configured validation accuracy")
                 break
 
-        try:
-            batch = next(batches)
-        except StopIteration:
-            batches = iter(train_loader)
-            batch = next(batches)
-
-        learning_rate = stage1_learning_rate(completed_steps)
+        learning_rate = stage1_learning_rate(completed_steps, total_steps)
         for group in optimizer.param_groups:
             group["lr"] = learning_rate
-        reads, previous_rewards, previous_actions, targets, mask = (
-            unpack_stage1_batch(batch, DEVICE)
-        )
-        sequence_length = int(mask.sum(dim=1).max().item())
-        reads = reads[:, :sequence_length]
-        previous_rewards = previous_rewards[:, :sequence_length]
-        previous_actions = previous_actions[:, :sequence_length]
-        targets = tuple(target[:, :sequence_length] for target in targets)
-        active_mask = mask[:, :sequence_length]
 
         model.train()
         optimizer.zero_grad(set_to_none=True)
         started = time.time()
-        logits, _ = recurrent_forward_chunked(
-            model,
-            reads,
-            previous_rewards,
-            previous_actions,
-        )
-        loss, metrics = factorized_imitation_loss(logits, targets, active_mask)
-        loss.backward()
+        accumulated_loss = 0.0
+        accumulated_factor_accuracy = 0.0
+        accumulated_tick_accuracy = 0.0
+        for _ in range(STAGE1_GRAD_ACCUM_STEPS):
+            batch = next(batches)
+            reads, previous_rewards, previous_actions, targets, mask = (
+                unpack_stage1_batch(batch, DEVICE)
+            )
+            sequence_length = int(mask.sum(dim=1).max().item())
+            reads = reads[:, :sequence_length]
+            previous_rewards = previous_rewards[:, :sequence_length]
+            previous_actions = previous_actions[:, :sequence_length]
+            targets = tuple(target[:, :sequence_length] for target in targets)
+            active_mask = mask[:, :sequence_length]
+
+            logits, _ = recurrent_forward_chunked(
+                model,
+                reads,
+                previous_rewards,
+                previous_actions,
+            )
+            loss, metrics = factorized_imitation_loss(
+                logits, targets, active_mask
+            )
+            (loss / STAGE1_GRAD_ACCUM_STEPS).backward()
+            accumulated_loss += float(loss.detach()) / STAGE1_GRAD_ACCUM_STEPS
+            accumulated_factor_accuracy += (
+                float(metrics["factor_accuracy"]) / STAGE1_GRAD_ACCUM_STEPS
+            )
+            accumulated_tick_accuracy += (
+                float(metrics["tick_accuracy"]) / STAGE1_GRAD_ACCUM_STEPS
+            )
+
         gradient_norm = torch.nn.utils.clip_grad_norm_(
             model.parameters(), MAX_GRAD_NORM
         )
         optimizer.step()
         completed_steps += 1
         print(
-            f"stage1 {completed_steps:4d}/{STAGE1_MAX_STEPS} | "
-            f"loss {float(loss.detach()):.4f} | "
-            f"factor_acc {float(metrics['factor_accuracy']):.4f} | "
-            f"tick_acc {float(metrics['tick_accuracy']):.4f} | "
+            f"stage1 {completed_steps:4d}/{total_steps} | "
+            f"loss {accumulated_loss:.4f} | "
+            f"factor_acc {accumulated_factor_accuracy:.4f} | "
+            f"tick_acc {accumulated_tick_accuracy:.4f} | "
             f"norm {float(gradient_norm):.4f} | "
             f"lr {learning_rate:.2e} | dt {time.time() - started:.2f}s"
         )
