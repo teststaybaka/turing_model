@@ -201,23 +201,6 @@ def _validate_number(s):
     return s
 
 
-def _gen_number(rng, min_len, max_len):
-    length = rng.randint(min_len, max_len)
-    if length == 1:
-        return rng.choice(DIGITS)
-    return rng.choice("123456789") + "".join(
-        rng.choice(DIGITS) for _ in range(length - 1)
-    )
-
-
-def _gen_items(n_examples, min_len, max_len, seed):
-    rng = random.Random(seed)
-    return [
-        (_gen_number(rng, min_len, max_len), _gen_number(rng, min_len, max_len))
-        for _ in range(n_examples)
-    ]
-
-
 def _initial_tape(op_token, a, b):
     return (
         [op_token]
@@ -256,9 +239,7 @@ def _simulate(task, initial_tape, program, answer):
 
         head0_write = program.head0_writes[i]
         head1_write = program.head1_writes[i]
-        if head0 == head1 and head0_write != WRITE_NOOP and head1_write != WRITE_NOOP:
-            if head0_write != head1_write:
-                raise AssertionError(f"{task}: conflicting writes at tape position {head0}")
+        # Head 1 wins when both heads write the same cell in one tick.
         _apply_write(tape, head0, head0_write)
         _apply_write(tape, head1, head1_write)
 
@@ -593,24 +574,14 @@ TASK_GENERATORS = {
     "add": generate_add,
     "mul": generate_mul,
 }
-DEFAULT_TASKS = ["add", "mul"]
-
-
-TRAIN_ADD = _gen_items(100000, 1, 8, seed=42)
-VAL_ADD = _gen_items(500, 1, 8, seed=123)
-TEST_LONG_ADD = _gen_items(500, 12, 16, seed=456)
-
-TRAIN_MUL = _gen_items(100000, 1, 4, seed=43)
-VAL_MUL = _gen_items(500, 1, 4, seed=124)
-TEST_LONG_MUL = _gen_items(500, 6, 8, seed=457)
 
 
 class ArithmeticTickDataset:
     def __init__(
         self,
-        add_items=TRAIN_ADD,
-        mul_items=TRAIN_MUL,
-        tasks=DEFAULT_TASKS,
+        add_items,
+        mul_items,
+        tasks,
         shuffle_seed=None,
     ):
         self.items = []
@@ -628,39 +599,6 @@ class ArithmeticTickDataset:
     def __getitem__(self, idx):
         task, a, b = self.items[idx]
         return TASK_GENERATORS[task](a, b)
-
-
-# --- Curriculum ---------------------------------------------------------------
-# Stages run in order: add starts at single digits and grows to full length,
-# then mul does the same, and the final stage mixes both ops at the full
-# training ranges. Counts are per-task example counts.
-CURRICULUM_STAGES = [
-    (["add"], (1, 1), None, 5000),
-    (["add"], (1, 2), None, 10000),
-    (["add"], (1, 4), None, 15000),
-    (["add"], (1, 8), None, 20000),
-    (["mul"], None, (1, 1), 5000),
-    (["mul"], None, (1, 2), 15000),
-    (["mul"], None, (1, 4), 25000),
-    (["add", "mul"], (1, 8), (1, 4), 100000),
-]
-
-
-def curriculum_dataset(stages=CURRICULUM_STAGES, seed=2000):
-    """One dataset whose items follow the curriculum order: each stage is
-    shuffled internally, stages are concatenated in order."""
-    dataset = ArithmeticTickDataset(add_items=[], mul_items=[])
-    for i, (tasks, add_len, mul_len, n_examples) in enumerate(stages):
-        base = seed + 3 * i
-        add_items = (
-            _gen_items(n_examples, *add_len, seed=base) if "add" in tasks else []
-        )
-        mul_items = (
-            _gen_items(n_examples, *mul_len, seed=base + 1) if "mul" in tasks else []
-        )
-        stage = ArithmeticTickDataset(add_items, mul_items, tasks, shuffle_seed=base + 2)
-        dataset.items.extend(stage.items)
-    return dataset
 
 
 class ArithmeticTickDataLoader:

@@ -5,11 +5,11 @@ a configurable held-out tick accuracy (or a hard step limit), and the critic
 parameters are excluded from the optimizer.
 
 Stage 2 treats one question as a trial containing several fresh tape episodes.
-An episode ends when the output becomes correct, an invalid action is produced,
-or its movement budget is exhausted. The tape resets to the same question while
-the Mamba state persists. Only the last episode terminates the trial, so
-discounted returns and GAE cross episode boundaries. The previous scalar reward
-is an explicit input on the next tick.
+An episode ends when the output becomes correct or its movement budget is
+exhausted. The tape resets to the same question while the Mamba state persists.
+Only the last episode terminates the trial, so discounted returns and GAE cross
+episode boundaries. The previous scalar reward is an explicit input on the next
+tick.
 
 Several independent questions run in parallel. A fixed stage-2 question set is
 reshuffled and revisited for multiple dataset epochs. Evaluation reports
@@ -42,12 +42,6 @@ from continuous_arith_data_loader import (
     READ_PAD,
     READ_SEP,
     READ_VOCAB_SIZE,
-    TEST_LONG_ADD,
-    TEST_LONG_MUL,
-    TRAIN_ADD,
-    TRAIN_MUL,
-    VAL_ADD,
-    VAL_MUL,
     WRITE_INPUT_VOCAB_SIZE,
     WRITE_NOOP,
     WRITE_START,
@@ -67,9 +61,12 @@ RUN_STAGE1 = True
 RUN_STAGE2 = True
 LOAD_CHECKPOINT = None
 TASKS = ("add", "mul")
+TRAIN_DIGIT_RANGES = {"add": (1, 8), "mul": (1, 4)}
+TEST_LONG_DIGIT_RANGES = {"add": (12, 16), "mul": (6, 8)}
 
 # Stage 1 intentionally stops before driving imitation loss to zero.
 STAGE1_ITEMS_PER_TASK = 50_000
+STAGE1_EVAL_ITEMS_PER_TASK = 500
 STAGE1_MICRO_BATCH_SIZE = 128
 STAGE1_GRAD_ACCUM_STEPS = 1
 STAGE1_MIN_STEPS = 100
@@ -134,6 +131,48 @@ log_file = os.path.join(log_dir, "continuous_episode_mamba3_log.txt")
 
 
 # --- Shared helpers -----------------------------------------------------------
+def generate_decimal_number(rng, min_digits, max_digits):
+    length = rng.randint(min_digits, max_digits)
+    if length == 1:
+        return rng.choice("0123456789")
+    return rng.choice("123456789") + "".join(
+        rng.choice("0123456789") for _ in range(length - 1)
+    )
+
+
+def generate_number_pairs(count, digit_range, seed):
+    min_digits, max_digits = digit_range
+    if count < 0:
+        raise ValueError("item count cannot be negative")
+    if min_digits <= 0 or max_digits < min_digits:
+        raise ValueError(f"invalid digit range {digit_range}")
+    rng = random.Random(seed)
+    return [
+        (
+            generate_decimal_number(rng, min_digits, max_digits),
+            generate_decimal_number(rng, min_digits, max_digits),
+        )
+        for _ in range(count)
+    ]
+
+
+def build_imitation_dataset(count, digit_ranges, seed, shuffle_seed=None):
+    items = {
+        task: generate_number_pairs(
+            count,
+            digit_ranges[task],
+            seed=seed + task_index,
+        )
+        for task_index, task in enumerate(TASKS)
+    }
+    return ArithmeticTickDataset(
+        add_items=items.get("add", []),
+        mul_items=items.get("mul", []),
+        tasks=TASKS,
+        shuffle_seed=shuffle_seed,
+    )
+
+
 def is_critic_parameter(name):
     return name.startswith(("critic_mlp.", "critic_ln.", "critic_head."))
 
@@ -270,24 +309,21 @@ def factorized_imitation_loss(logits, targets, mask):
 
 # --- Stage 1: deliberately limited behavior cloning --------------------------
 def stage1_datasets():
-    rng = random.Random(42)
-    add_items = rng.sample(TRAIN_ADD, min(STAGE1_ITEMS_PER_TASK, len(TRAIN_ADD)))
-    mul_items = rng.sample(TRAIN_MUL, min(STAGE1_ITEMS_PER_TASK, len(TRAIN_MUL)))
-    train = ArithmeticTickDataset(
-        add_items=add_items,
-        mul_items=mul_items,
-        tasks=TASKS,
+    train = build_imitation_dataset(
+        STAGE1_ITEMS_PER_TASK,
+        TRAIN_DIGIT_RANGES,
+        seed=42,
         shuffle_seed=42,
     )
-    validation = ArithmeticTickDataset(
-        add_items=VAL_ADD,
-        mul_items=VAL_MUL,
-        tasks=TASKS,
+    validation = build_imitation_dataset(
+        STAGE1_EVAL_ITEMS_PER_TASK,
+        TRAIN_DIGIT_RANGES,
+        seed=123,
     )
-    test = ArithmeticTickDataset(
-        add_items=TEST_LONG_ADD,
-        mul_items=TEST_LONG_MUL,
-        tasks=TASKS,
+    test = build_imitation_dataset(
+        STAGE1_EVAL_ITEMS_PER_TASK,
+        TEST_LONG_DIGIT_RANGES,
+        seed=456,
     )
     return train, validation, test
 
@@ -451,10 +487,6 @@ def train_stage1(model, evaluation_model):
 
 
 # --- Tape environment --------------------------------------------------------
-class InvalidAction(ValueError):
-    pass
-
-
 def move_delta(move):
     if move == MOVE_LEFT:
         return -1
@@ -462,7 +494,7 @@ def move_delta(move):
         return 1
     if move == MOVE_STAY:
         return 0
-    raise InvalidAction(f"invalid move token {move}")
+    raise ValueError(f"invalid move token {move}")
 
 
 class ArithmeticTapeEnvironment:
@@ -500,24 +532,18 @@ class ArithmeticTapeEnvironment:
     def apply(self, action):
         action = tuple(int(token) for token in action)
         if len(action) != NUM_ACTION_FACTORS:
-            raise InvalidAction(
+            raise ValueError(
                 f"expected {NUM_ACTION_FACTORS} action factors, got {len(action)}"
             )
         head0_move, head1_move, head0_write, head1_write = action
         for move in (head0_move, head1_move):
             if not (MOVE_STAY <= move < MOVE_VOCAB_SIZE):
-                raise InvalidAction(f"invalid move token {move}")
+                raise ValueError(f"invalid move token {move}")
         for write in (head0_write, head1_write):
             if not (WRITE_NOOP <= write < WRITE_VOCAB_SIZE):
-                raise InvalidAction(f"invalid write token {write}")
-        if (
-            self.head0 == self.head1
-            and head0_write != WRITE_NOOP
-            and head1_write != WRITE_NOOP
-            and head0_write != head1_write
-        ):
-            raise InvalidAction("conflicting writes to the same tape cell")
+                raise ValueError(f"invalid write token {write}")
 
+        # Head 1 wins when both heads write the same cell in one tick.
         for position, write in (
             (self.head0, head0_write),
             (self.head1, head1_write),
@@ -621,10 +647,7 @@ def initialize_question_trials(items):
 def step_trial_episode(trial, action):
     """Apply one action and return (episode_done, succeeded, reward)."""
     trial.episode_steps += 1
-    try:
-        trial.environment.apply(action)
-    except InvalidAction:
-        return True, False, FAILURE_REWARD
+    trial.environment.apply(action)
     if trial.environment.is_success():
         return True, True, SUCCESS_REWARD
     if trial.episode_steps >= trial.budget:
@@ -1088,29 +1111,39 @@ def format_episode_statistics(label, statistics):
 
 
 # --- Stage 2 training ---------------------------------------------------------
-def build_question_set(add_items, mul_items, count, seed):
+def build_question_set(count, digit_ranges, seed):
+    if not TASKS:
+        raise ValueError("at least one task is required")
     rng = random.Random(seed)
-    add_count = count // 2
-    mul_count = count - add_count
-    selected_add = rng.sample(add_items, min(add_count, len(add_items)))
-    selected_mul = rng.sample(mul_items, min(mul_count, len(mul_items)))
-    questions = (
-        [("add", a, b) for a, b in selected_add]
-        + [("mul", a, b) for a, b in selected_mul]
-    )
+    per_task, remainder = divmod(count, len(TASKS))
+    questions = []
+    for task_index, task in enumerate(TASKS):
+        task_count = per_task + int(task_index < remainder)
+        pairs = generate_number_pairs(
+            task_count,
+            digit_ranges[task],
+            seed=seed + task_index + 1,
+        )
+        questions.extend((task, a, b) for a, b in pairs)
     rng.shuffle(questions)
     return questions
 
 
 def train_stage2(model, evaluation_model):
     train_questions = build_question_set(
-        TRAIN_ADD, TRAIN_MUL, STAGE2_QUESTION_SET_SIZE, seed=2026
+        STAGE2_QUESTION_SET_SIZE,
+        TRAIN_DIGIT_RANGES,
+        seed=2026,
     )
     validation_questions = build_question_set(
-        VAL_ADD, VAL_MUL, STAGE2_EVAL_QUESTIONS, seed=2027
+        STAGE2_EVAL_QUESTIONS,
+        TRAIN_DIGIT_RANGES,
+        seed=2027,
     )
     test_questions = build_question_set(
-        TEST_LONG_ADD, TEST_LONG_MUL, STAGE2_EVAL_QUESTIONS, seed=2028
+        STAGE2_EVAL_QUESTIONS,
+        TEST_LONG_DIGIT_RANGES,
+        seed=2028,
     )
     optimizer = configure_optimizer(
         evaluation_model, STAGE2_LR, include_critic=True
@@ -1229,7 +1262,7 @@ def main():
     print(f"Stage 2 dataset epochs: {STAGE2_DATASET_EPOCHS}")
     print("Latent input/output: none")
     print("Previous reward input: raw scalar")
-    print("Episode termination: automatic success, invalid action, or budget")
+    print("Episode termination: automatic success or budget")
     print("Policy sentinels: none; START is previous-action input only")
     print("Mamba BPTT: full trial")
 
