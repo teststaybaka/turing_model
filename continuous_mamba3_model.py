@@ -1,4 +1,4 @@
-"""Mamba-3 actor-critic with distinct action input and output vocabularies.
+"""Mamba-3 policy with optional critic and distinct action vocabularies.
 
 Previous-action inputs may contain input-only sentinels such as START. Policy
 heads contain executable actions only, so sentinels never need logit masking.
@@ -227,8 +227,8 @@ class GPT(nn.Module):
             raise ValueError(
                 "previous-action inputs must correspond to policy outputs"
             )
-        if config.critic_outputs <= 0:
-            raise ValueError("at least one critic output is required")
+        if config.critic_outputs < 0:
+            raise ValueError("critic_outputs cannot be negative")
         if config.scalar_input_dim < 0:
             raise ValueError("scalar_input_dim cannot be negative")
 
@@ -292,13 +292,16 @@ class GPT(nn.Module):
         if config.use_latent:
             self.latent_mlp = SwiGLUProject(config.n_embd, config.n_embd)
             self.latent_ln = nn.LayerNorm(config.n_embd)
-        self.critic_mlp = SwiGLUProject(config.n_embd, config.n_embd)
-
-        self.critic_ln = nn.LayerNorm(config.n_embd)
-
-        self.critic_head = nn.Linear(
-            config.n_embd, config.critic_outputs, bias=True
-        )
+        if config.critic_outputs:
+            self.critic_mlp = SwiGLUProject(config.n_embd, config.n_embd)
+            self.critic_ln = nn.LayerNorm(config.n_embd)
+            self.critic_head = nn.Linear(
+                config.n_embd, config.critic_outputs, bias=True
+            )
+        else:
+            self.critic_mlp = None
+            self.critic_ln = None
+            self.critic_head = None
 
         self.apply(self._init_weights)
         for module in self.modules():
@@ -397,7 +400,9 @@ class GPT(nn.Module):
                 self.policy_heads,
             )
         )
-        values = self.critic_head(self.critic_ln(self.critic_mlp(x)))
+        values = None
+        if self.critic_head is not None:
+            values = self.critic_head(self.critic_ln(self.critic_mlp(x)))
         if self.config.use_latent:
             latent_out = self.latent_ln(self.latent_mlp(x))
             return logits, values, latent_out, new_states

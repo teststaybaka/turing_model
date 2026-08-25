@@ -1,15 +1,15 @@
-"""Repeated-question recurrent actor-critic training for arithmetic tapes.
+"""Repeated-question positive self-imitation for arithmetic tapes.
 
 Stage 1 briefly behavior-clones generated arithmetic trajectories. It stops at
-a configurable held-out tick accuracy (or a hard step limit), and the critic
-parameters are excluded from the optimizer.
+a configurable held-out tick accuracy (or a hard step limit).
 
 Stage 2 treats one question as a trial containing several fresh tape episodes.
 An episode ends when the output becomes correct or its movement budget is
 exhausted. The tape resets to the same question while the Mamba state persists.
-Only the last episode terminates the trial, so discounted returns and GAE cross
-episode boundaries. The previous scalar reward is an explicit input on the next
-tick.
+Only positive success rewards contribute to the policy loss. Their discounted
+Monte Carlo returns cross episode boundaries, while failed trials produce no
+optimizer update. The previous scalar reward remains an explicit input on the
+next tick, including negative failure feedback.
 
 Several independent questions run in parallel. A fixed stage-2 question set is
 reshuffled and revisited for multiple dataset epochs. Evaluation reports
@@ -85,14 +85,12 @@ STAGE2_BUDGET_FACTOR = 1.5
 STAGE2_EVAL_INTERVAL_EPOCHS = 1
 STAGE2_EVAL_QUESTIONS = 32
 STAGE2_LR = 1e-4
+STAGE2_SAMPLING_TEMPERATURE = 0.25
 
 SUCCESS_REWARD = 1.0
 FAILURE_REWARD = -1.0
 NO_REWARD = 0.0
-DISCOUNT = 0.999
-GAE_LAMBDA = 1.0
-VALUE_LOSS_COEF = 0.5
-ENTROPY_COEF = 0.001
+POSITIVE_RETURN_DISCOUNT = 0.999
 MAX_GRAD_NORM = 1.0
 
 NUM_ACTION_FACTORS = 4
@@ -120,7 +118,7 @@ config = GPTConfig(
     n_layers=4,
     n_heads=4,
     n_embd=64,
-    critic_outputs=1,
+    critic_outputs=0,
     use_latent=False,
     scalar_input_dim=1,
 )
@@ -173,16 +171,11 @@ def build_imitation_dataset(count, digit_ranges, seed, shuffle_seed=None):
     )
 
 
-def is_critic_parameter(name):
-    return name.startswith(("critic_mlp.", "critic_ln.", "critic_head."))
-
-
-def configure_optimizer(model, learning_rate, include_critic):
+def configure_optimizer(model, learning_rate):
     parameters = {
         name: parameter
         for name, parameter in model.named_parameters()
         if parameter.requires_grad
-        and (include_critic or not is_critic_parameter(name))
     }
     decay = [parameter for parameter in parameters.values() if parameter.ndim >= 2]
     no_decay = [
@@ -262,7 +255,7 @@ def recurrent_forward_chunked(
     """Retain the Mamba graph across chunks for full-sequence BPTT."""
     states = None
     logits_by_factor = [[] for _ in range(config.num_outputs)]
-    values = []
+    values = [] if config.critic_outputs else None
     for start in range(0, reads.size(1), config.block_size):
         end = min(start + config.block_size, reads.size(1))
         logits, chunk_values, states = model(
@@ -273,13 +266,14 @@ def recurrent_forward_chunked(
         )
         for factor, factor_logits in enumerate(logits):
             logits_by_factor[factor].append(factor_logits)
-        values.append(chunk_values.squeeze(-1))
+        if values is not None:
+            values.append(chunk_values.squeeze(-1))
     return (
         tuple(
             torch.cat(factor_parts, dim=1)
             for factor_parts in logits_by_factor
         ),
-        torch.cat(values, dim=1),
+        None if values is None else torch.cat(values, dim=1),
     )
 
 
@@ -386,9 +380,7 @@ def train_stage1(model, evaluation_model):
         raise ValueError(
             "stage 1 dataset must contain at least one effective batch"
         )
-    optimizer = configure_optimizer(
-        evaluation_model, STAGE1_MAX_LR, include_critic=False
-    )
+    optimizer = configure_optimizer(evaluation_model, STAGE1_MAX_LR)
     batches = iter(train_loader)
     completed_steps = 0
 
@@ -611,11 +603,9 @@ class TrialTrajectory:
     previous_rewards: torch.Tensor
     previous_actions: torch.Tensor
     actions: torch.Tensor
-    values: torch.Tensor
     rewards: torch.Tensor
     dones: torch.Tensor
-    advantages: torch.Tensor | None = None
-    returns: torch.Tensor | None = None
+    positive_returns: torch.Tensor | None = None
 
     @property
     def num_ticks(self):
@@ -657,34 +647,28 @@ def step_trial_episode(trial, action):
 
 def sample_factorized_actions(logits):
     actions = []
-    entropies = []
     for factor_logits in logits:
-        factor_logits = factor_logits[:, 0]
-        log_probs = F.log_softmax(factor_logits, dim=-1)
-        probabilities = log_probs.exp()
+        factor_logits = factor_logits[:, 0] / STAGE2_SAMPLING_TEMPERATURE
+        probabilities = F.softmax(factor_logits, dim=-1)
         actions.append(
             torch.multinomial(probabilities, num_samples=1).squeeze(-1)
         )
-        entropies.append(-(probabilities * log_probs).sum(dim=-1))
-    return torch.stack(actions, dim=-1), torch.stack(entropies, dim=-1).sum(-1)
+    return torch.stack(actions, dim=-1)
 
 
-def compute_trial_gae(trajectory):
-    advantages = torch.zeros_like(trajectory.values)
-    gae = trajectory.values.new_tensor(0.0)
-    next_value = trajectory.values.new_tensor(0.0)
+def compute_positive_trial_returns(trajectory):
+    """Propagate only success rewards across the full repeated-question trial."""
+    positive_returns = torch.zeros_like(trajectory.rewards)
+    running_return = trajectory.rewards.new_tensor(0.0)
     for tick in range(trajectory.num_ticks - 1, -1, -1):
         nonterminal = 1.0 - trajectory.dones[tick]
-        delta = (
-            trajectory.rewards[tick]
-            + DISCOUNT * next_value * nonterminal
-            - trajectory.values[tick]
+        positive_reward = trajectory.rewards[tick].clamp_min(0.0)
+        running_return = (
+            positive_reward
+            + POSITIVE_RETURN_DISCOUNT * nonterminal * running_return
         )
-        gae = delta + DISCOUNT * GAE_LAMBDA * nonterminal * gae
-        advantages[tick] = gae
-        next_value = trajectory.values[tick]
-    trajectory.advantages = advantages
-    trajectory.returns = advantages + trajectory.values
+        positive_returns[tick] = running_return
+    trajectory.positive_returns = positive_returns
 
 
 @torch.no_grad()
@@ -697,7 +681,6 @@ def collect_trial_batch(model, items):
             "previous_rewards": [],
             "previous_actions": [],
             "actions": [],
-            "values": [],
             "rewards": [],
             "dones": [],
         }
@@ -737,13 +720,13 @@ def collect_trial_batch(model, items):
         previous_rewards = torch.tensor(
             previous_reward_rows, dtype=torch.float32, device=DEVICE
         ).unsqueeze(1)
-        logits, values, states = model(
+        logits, _, states = model(
             reads,
             previous_actions,
             states=states,
             scalar_inputs=previous_rewards,
         )
-        actions, _ = sample_factorized_actions(logits)
+        actions = sample_factorized_actions(logits)
         action_rows = actions.tolist()
 
         for index, trial in enumerate(trials):
@@ -766,7 +749,6 @@ def collect_trial_batch(model, items):
             )
             buffer["previous_actions"].append(previous_rows[index])
             buffer["actions"].append(action)
-            buffer["values"].append(float(values[index, 0, 0].item()))
             buffer["rewards"].append(reward)
 
             if episode_done:
@@ -786,11 +768,10 @@ def collect_trial_batch(model, items):
                 buffer["previous_actions"], dtype=torch.long
             ),
             actions=torch.tensor(buffer["actions"], dtype=torch.long),
-            values=torch.tensor(buffer["values"], dtype=torch.float32),
             rewards=torch.tensor(buffer["rewards"], dtype=torch.float32),
             dones=torch.tensor(buffer["dones"], dtype=torch.float32),
         )
-        compute_trial_gae(trajectory)
+        compute_positive_trial_returns(trajectory)
         trajectories.append(trajectory)
 
     trial_count = len(trials)
@@ -803,18 +784,6 @@ def collect_trial_batch(model, items):
         "reward": sum(float(t.rewards.sum().item()) for t in trajectories),
         "total_ticks": sum(t.num_ticks for t in trajectories),
     }
-
-
-def normalize_advantages(trajectories):
-    all_advantages = torch.cat(
-        [trajectory.advantages for trajectory in trajectories]
-    )
-    mean = all_advantages.mean()
-    standard_deviation = all_advantages.std(unbiased=False).clamp_min(1e-8)
-    for trajectory in trajectories:
-        trajectory.advantages = (
-            trajectory.advantages - mean
-        ) / standard_deviation
 
 
 def collate_trajectories(trajectories):
@@ -840,8 +809,7 @@ def collate_trajectories(trajectories):
     previous_actions[..., :2] = MOVE_STAY
     previous_actions[..., 2:] = WRITE_NOOP
     actions = previous_actions.clone()
-    returns = torch.zeros(batch_size, padded_ticks)
-    advantages = torch.zeros(batch_size, padded_ticks)
+    positive_returns = torch.zeros(batch_size, padded_ticks)
     mask = torch.zeros(batch_size, padded_ticks)
 
     for row, trajectory in enumerate(trajectories):
@@ -850,8 +818,7 @@ def collate_trajectories(trajectories):
         previous_rewards[row, :length] = trajectory.previous_rewards
         previous_actions[row, :length] = trajectory.previous_actions
         actions[row, :length] = trajectory.actions
-        returns[row, :length] = trajectory.returns
-        advantages[row, :length] = trajectory.advantages
+        positive_returns[row, :length] = trajectory.positive_returns
         mask[row, :length] = 1.0
 
     return tuple(
@@ -861,8 +828,7 @@ def collate_trajectories(trajectories):
             previous_rewards,
             previous_actions,
             actions,
-            returns,
-            advantages,
+            positive_returns,
             mask,
         )
     )
@@ -887,30 +853,40 @@ def fixed_action_statistics(logits, actions):
     )
 
 
-def actor_critic_update(model, optimizer, trajectories):
-    normalize_advantages(trajectories)
+def reward_weighted_imitation_update(model, optimizer, trajectories):
     (
         reads,
         previous_rewards,
         previous_actions,
         actions,
-        returns,
-        advantages,
+        positive_returns,
         mask,
     ) = collate_trajectories(trajectories)
-    model.train()
+    weights = positive_returns * mask
+    weight_sum = weights.sum()
+    valid_ticks = mask.sum().clamp_min(1.0)
+    rewarded_ticks = weights.gt(0).logical_and(mask.bool()).sum()
     optimizer.zero_grad(set_to_none=True)
-    logits, values = recurrent_forward_chunked(
+    if weight_sum.item() == 0.0:
+        return {
+            "loss": 0.0,
+            "entropy": float("nan"),
+            "gradient_norm": 0.0,
+            "rewarded_fraction": 0.0,
+            "mean_weight": 0.0,
+            "updated": False,
+        }
+
+    model.train()
+    logits, _ = recurrent_forward_chunked(
         model,
         reads,
         previous_rewards,
         previous_actions,
     )
     log_probs, entropies = fixed_action_statistics(logits, actions)
-    policy_loss = masked_mean(-log_probs * advantages, mask)
-    value_loss = 0.5 * masked_mean((values - returns).square(), mask)
-    entropy = masked_mean(entropies, mask)
-    loss = policy_loss + VALUE_LOSS_COEF * value_loss - ENTROPY_COEF * entropy
+    loss = ((-log_probs / NUM_ACTION_FACTORS) * weights).sum() / weight_sum
+    entropy = masked_mean(entropies / NUM_ACTION_FACTORS, mask)
     loss.backward()
     gradient_norm = torch.nn.utils.clip_grad_norm_(
         model.parameters(), MAX_GRAD_NORM
@@ -918,10 +894,11 @@ def actor_critic_update(model, optimizer, trajectories):
     optimizer.step()
     return {
         "loss": float(loss.detach()),
-        "policy": float(policy_loss.detach()),
-        "value": float(value_loss.detach()),
         "entropy": float(entropy.detach()),
         "gradient_norm": float(gradient_norm),
+        "rewarded_fraction": float(rewarded_ticks / valid_ticks),
+        "mean_weight": float(weight_sum / rewarded_ticks.clamp_min(1)),
+        "updated": True,
     }
 
 
@@ -1145,15 +1122,14 @@ def train_stage2(model, evaluation_model):
         TEST_LONG_DIGIT_RANGES,
         seed=2028,
     )
-    optimizer = configure_optimizer(
-        evaluation_model, STAGE2_LR, include_critic=True
-    )
+    optimizer = configure_optimizer(evaluation_model, STAGE2_LR)
     rng = random.Random(2029)
-    total_updates = (
+    total_batches = (
         math.ceil(len(train_questions) / STAGE2_PARALLEL_TRIALS)
         * STAGE2_DATASET_EPOCHS
     )
-    completed_updates = 0
+    completed_batches = 0
+    optimizer_updates = 0
 
     for epoch in range(STAGE2_DATASET_EPOCHS):
         if epoch % STAGE2_EVAL_INTERVAL_EPOCHS == 0:
@@ -1185,19 +1161,27 @@ def train_stage2(model, evaluation_model):
             trajectories, rollout = collect_trial_batch(
                 evaluation_model, batch_items
             )
-            metrics = actor_critic_update(model, optimizer, trajectories)
-            completed_updates += 1
+            metrics = reward_weighted_imitation_update(
+                model, optimizer, trajectories
+            )
+            completed_batches += 1
+            optimizer_updates += int(metrics["updated"])
             epoch_statistics = merge_episode_statistics(
                 epoch_statistics, rollout
             )
+            successful_episodes = sum(rollout["successes"])
+            episode_count = len(batch_items) * STAGE2_EPISODES_PER_TRIAL
             print(
-                f"stage2 step {completed_updates:5d}/{total_updates} | "
+                f"stage2 batch {completed_batches:5d}/{total_batches} | "
+                f"updates {optimizer_updates} | "
                 f"epoch {epoch + 1}/{STAGE2_DATASET_EPOCHS} | "
                 f"loss {metrics['loss']:.4f} | "
-                f"policy {metrics['policy']:.4f} | "
-                f"value {metrics['value']:.4f} | "
+                f"success {successful_episodes}/{episode_count} | "
+                f"rewarded {metrics['rewarded_fraction']:.3f} | "
+                f"weight {metrics['mean_weight']:.3f} | "
                 f"entropy {metrics['entropy']:.4f} | "
                 f"norm {metrics['gradient_norm']:.4f} | "
+                f"update {int(metrics['updated'])} | "
                 f"dt {time.time() - started:.2f}s"
             )
 
@@ -1209,6 +1193,13 @@ def train_stage2(model, evaluation_model):
         with open(log_file, "a") as log:
             log.write(message + "\n")
 
+    update_message = (
+        f"Stage 2 optimizer updates: {optimizer_updates}/{total_batches} "
+        "rollout batches"
+    )
+    print(update_message)
+    with open(log_file, "a") as log:
+        log.write(update_message + "\n")
     for label, items in (
         ("train", train_questions[:STAGE2_EVAL_QUESTIONS]),
         ("val", validation_questions),
@@ -1234,14 +1225,14 @@ def save_checkpoint(path, model, stage):
 
 
 def main():
-    if config.critic_outputs != 1:
-        raise ValueError("repeated-question training requires a scalar critic")
     if config.scalar_input_dim != 1:
         raise ValueError("repeated-question training requires one reward input")
     if STAGE2_EPISODES_PER_TRIAL <= 0:
         raise ValueError("STAGE2_EPISODES_PER_TRIAL must be positive")
     if STAGE2_PARALLEL_TRIALS <= 0:
         raise ValueError("STAGE2_PARALLEL_TRIALS must be positive")
+    if STAGE2_SAMPLING_TEMPERATURE <= 0:
+        raise ValueError("STAGE2_SAMPLING_TEMPERATURE must be positive")
     torch.manual_seed(42)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(42)
@@ -1264,6 +1255,10 @@ def main():
     print("Previous reward input: raw scalar")
     print("Episode termination: automatic success or budget")
     print("Policy sentinels: none; START is previous-action input only")
+    print("Stage 2 objective: positive-return weighted self-imitation")
+    print("Stage 2 critic/GAE/entropy bonus: disabled")
+    print(f"Stage 2 sampling temperature: {STAGE2_SAMPLING_TEMPERATURE}")
+    print(f"Positive-return discount: {POSITIVE_RETURN_DISCOUNT}")
     print("Mamba BPTT: full trial")
 
     with open(log_file, "w"):
