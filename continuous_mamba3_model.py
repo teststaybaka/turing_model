@@ -29,8 +29,8 @@ class GPTConfig:
     output_streams: tuple[tuple[str, int], ...] = (
         ("move", 3),
         ("move", 3),
-        ("write", 17),
-        ("write", 17),
+        ("write", 18),
+        ("write", 18),
     )
     token_embd: int = 32
     n_layers: int = 12

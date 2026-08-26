@@ -43,9 +43,11 @@ WRITE_SEP = 4
 WRITE_END = 5
 WRITE_USED = 6
 WRITE_DIGIT_BASE = 7
-WRITE_VOCAB_SIZE = WRITE_DIGIT_BASE + len(DIGITS)
-WRITE_START = WRITE_VOCAB_SIZE
-WRITE_INPUT_VOCAB_SIZE = WRITE_VOCAB_SIZE + 1
+WRITE_SUBMIT = WRITE_DIGIT_BASE + len(DIGITS)
+WRITE_VOCAB_SIZE = WRITE_SUBMIT + 1
+# Input slot 17 is START; output slot 17 is SUBMIT and is never fed back.
+WRITE_START = WRITE_SUBMIT
+WRITE_INPUT_VOCAB_SIZE = WRITE_START + 1
 
 
 READ_TOKEN_NAMES = {
@@ -64,7 +66,6 @@ MOVE_TOKEN_NAMES = {
     MOVE_RIGHT: "[RIGHT]",
 }
 WRITE_TOKEN_NAMES = {
-    WRITE_START: "[START]",
     WRITE_NOOP: "[NOOP]",
     WRITE_BLANK: "[WRITE_BLANK]",
     WRITE_ADD: "[WRITE_ADD]",
@@ -72,6 +73,7 @@ WRITE_TOKEN_NAMES = {
     WRITE_SEP: "[WRITE_SEP]",
     WRITE_END: "[WRITE_END]",
     WRITE_USED: "[WRITE_USED]",
+    WRITE_SUBMIT: "[SUBMIT]",
 }
 for i, digit in enumerate(DIGITS):
     READ_TOKEN_NAMES[READ_DIGIT_BASE + i] = f"[{digit}]"
@@ -101,8 +103,10 @@ def write_to_read(write):
         return READ_END
     if write == WRITE_USED:
         return READ_USED
-    if WRITE_DIGIT_BASE <= write < WRITE_VOCAB_SIZE:
+    if WRITE_DIGIT_BASE <= write < WRITE_SUBMIT:
         return READ_DIGIT_BASE + (write - WRITE_DIGIT_BASE)
+    if write == WRITE_SUBMIT:
+        raise ValueError("WRITE_SUBMIT is a control action, not a tape symbol")
     raise ValueError(f"invalid write token {write}")
 
 
@@ -222,7 +226,7 @@ def _simulate(task, initial_tape, program, answer):
     head1 = 0
     head0_reads = []
     head1_reads = []
-    completed_ticks = None
+    submitted_ticks = None
 
     def output_is_complete():
         if any(tape.get(pos, READ_BLANK) != token for pos, token in expected_output.items()):
@@ -239,6 +243,12 @@ def _simulate(task, initial_tape, program, answer):
 
         head0_write = program.head0_writes[i]
         head1_write = program.head1_writes[i]
+        if WRITE_SUBMIT in (head0_write, head1_write):
+            if not output_is_complete():
+                raise AssertionError(f"{task}: program submitted an incorrect output")
+            submitted_ticks = i + 1
+            break
+
         # Head 1 wins when both heads write the same cell in one tick.
         _apply_write(tape, head0, head0_write)
         _apply_write(tape, head1, head1_write)
@@ -246,12 +256,8 @@ def _simulate(task, initial_tape, program, answer):
         head0 += _move_delta(program.head0_moves[i])
         head1 += _move_delta(program.head1_moves[i])
 
-        if output_is_complete():
-            completed_ticks = i + 1
-            break
-
-    if completed_ticks is None:
-        raise AssertionError(f"{task}: program never completed its output")
+    if submitted_ticks is None:
+        raise AssertionError(f"{task}: program never submitted its output")
 
     final_output = []
     for offset, expected_digit in enumerate(answer):
@@ -268,10 +274,10 @@ def _simulate(task, initial_tape, program, answer):
         task=task,
         head0_reads=head0_reads,
         head1_reads=head1_reads,
-        target_head0_moves=list(program.head0_moves[:completed_ticks]),
-        target_head1_moves=list(program.head1_moves[:completed_ticks]),
-        target_head0_writes=list(program.head0_writes[:completed_ticks]),
-        target_head1_writes=list(program.head1_writes[:completed_ticks]),
+        target_head0_moves=list(program.head0_moves[:submitted_ticks]),
+        target_head1_moves=list(program.head1_moves[:submitted_ticks]),
+        target_head0_writes=list(program.head0_writes[:submitted_ticks]),
+        target_head1_writes=list(program.head1_writes[:submitted_ticks]),
         answer=answer,
         final_output="".join(final_output),
     )
@@ -405,6 +411,7 @@ def generate_add(a, b):
         output_start,
         answer,
     )
+    program.step(head0_write=WRITE_SUBMIT)
     return _simulate("add", initial_tape, program, answer)
 
 
@@ -567,6 +574,7 @@ def generate_mul(a, b):
             program.step(head1_move=MOVE_RIGHT)
             program.step(head1_move=MOVE_RIGHT)
 
+    program.step(head0_write=WRITE_SUBMIT)
     return _simulate("mul", initial_tape, program, answer)
 
 

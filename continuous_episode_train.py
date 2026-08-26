@@ -4,7 +4,7 @@ Stage 1 briefly behavior-clones generated arithmetic trajectories. It stops at
 a configurable held-out tick accuracy (or a hard step limit).
 
 Stage 2 treats one question as a trial containing several fresh tape episodes.
-An episode ends when the output becomes correct or its movement budget is
+An episode ends when either head submits the output or its movement budget is
 exhausted. The tape resets to the same question while the Mamba state persists.
 Only positive success rewards contribute to the policy loss. Their discounted
 Monte Carlo returns cross episode boundaries, while failed trials produce no
@@ -45,6 +45,7 @@ from continuous_arith_data_loader import (
     WRITE_INPUT_VOCAB_SIZE,
     WRITE_NOOP,
     WRITE_START,
+    WRITE_SUBMIT,
     WRITE_VOCAB_SIZE,
     generate_add,
     generate_mul,
@@ -138,13 +139,12 @@ def generate_decimal_number(rng, min_digits, max_digits):
     )
 
 
-def generate_number_pairs(count, digit_range, seed):
+def generate_number_pairs(count, digit_range, rng):
     min_digits, max_digits = digit_range
     if count < 0:
         raise ValueError("item count cannot be negative")
     if min_digits <= 0 or max_digits < min_digits:
         raise ValueError(f"invalid digit range {digit_range}")
-    rng = random.Random(seed)
     return [
         (
             generate_decimal_number(rng, min_digits, max_digits),
@@ -155,13 +155,14 @@ def generate_number_pairs(count, digit_range, seed):
 
 
 def build_imitation_dataset(count, digit_ranges, seed, shuffle_seed=None):
+    rng = random.Random(seed)
     items = {
         task: generate_number_pairs(
             count,
             digit_ranges[task],
-            seed=seed + task_index,
+            rng,
         )
-        for task_index, task in enumerate(TASKS)
+        for task in TASKS
     }
     return ArithmeticTickDataset(
         add_items=items.get("add", []),
@@ -302,26 +303,6 @@ def factorized_imitation_loss(logits, targets, mask):
 
 
 # --- Stage 1: deliberately limited behavior cloning --------------------------
-def stage1_datasets():
-    train = build_imitation_dataset(
-        STAGE1_ITEMS_PER_TASK,
-        TRAIN_DIGIT_RANGES,
-        seed=42,
-        shuffle_seed=42,
-    )
-    validation = build_imitation_dataset(
-        STAGE1_EVAL_ITEMS_PER_TASK,
-        TRAIN_DIGIT_RANGES,
-        seed=123,
-    )
-    test = build_imitation_dataset(
-        STAGE1_EVAL_ITEMS_PER_TASK,
-        TEST_LONG_DIGIT_RANGES,
-        seed=456,
-    )
-    return train, validation, test
-
-
 @torch.no_grad()
 def evaluate_stage1(model, loader):
     model.eval()
@@ -356,7 +337,22 @@ def evaluate_stage1(model, loader):
 
 
 def train_stage1(model, evaluation_model):
-    train_dataset, validation_dataset, test_dataset = stage1_datasets()
+    train_dataset = build_imitation_dataset(
+        STAGE1_ITEMS_PER_TASK,
+        TRAIN_DIGIT_RANGES,
+        seed=42,
+        shuffle_seed=42,
+    )
+    validation_dataset = build_imitation_dataset(
+        STAGE1_EVAL_ITEMS_PER_TASK,
+        TRAIN_DIGIT_RANGES,
+        seed=123,
+    )
+    test_dataset = build_imitation_dataset(
+        STAGE1_EVAL_ITEMS_PER_TASK,
+        TEST_LONG_DIGIT_RANGES,
+        seed=456,
+    )
     train_loader = ArithmeticTickDataLoader(
         train_dataset,
         batch_size=STAGE1_MICRO_BATCH_SIZE,
@@ -535,6 +531,10 @@ class ArithmeticTapeEnvironment:
             if not (WRITE_NOOP <= write < WRITE_VOCAB_SIZE):
                 raise ValueError(f"invalid write token {write}")
 
+        if WRITE_SUBMIT in (head0_write, head1_write):
+            self.previous_action = action
+            return True
+
         # Head 1 wins when both heads write the same cell in one tick.
         for position, write in (
             (self.head0, head0_write),
@@ -550,6 +550,7 @@ class ArithmeticTapeEnvironment:
         self.head0 += move_delta(head0_move)
         self.head1 += move_delta(head1_move)
         self.previous_action = action
+        return False
 
     def is_success(self):
         expected_positions = {
@@ -637,9 +638,11 @@ def initialize_question_trials(items):
 def step_trial_episode(trial, action):
     """Apply one action and return (episode_done, succeeded, reward)."""
     trial.episode_steps += 1
-    trial.environment.apply(action)
-    if trial.environment.is_success():
-        return True, True, SUCCESS_REWARD
+    submitted = trial.environment.apply(action)
+    if submitted:
+        succeeded = trial.environment.is_success()
+        reward = SUCCESS_REWARD if succeeded else FAILURE_REWARD
+        return True, succeeded, reward
     if trial.episode_steps >= trial.budget:
         return True, False, FAILURE_REWARD
     return False, False, NO_REWARD
@@ -1099,7 +1102,7 @@ def build_question_set(count, digit_ranges, seed):
         pairs = generate_number_pairs(
             task_count,
             digit_ranges[task],
-            seed=seed + task_index + 1,
+            rng,
         )
         questions.extend((task, a, b) for a, b in pairs)
     rng.shuffle(questions)
@@ -1253,7 +1256,7 @@ def main():
     print(f"Stage 2 dataset epochs: {STAGE2_DATASET_EPOCHS}")
     print("Latent input/output: none")
     print("Previous reward input: raw scalar")
-    print("Episode termination: automatic success or budget")
+    print("Episode termination: explicit submission or budget")
     print("Policy sentinels: none; START is previous-action input only")
     print("Stage 2 objective: positive-return weighted self-imitation")
     print("Stage 2 critic/GAE/entropy bonus: disabled")
