@@ -43,11 +43,9 @@ WRITE_SEP = 4
 WRITE_END = 5
 WRITE_USED = 6
 WRITE_DIGIT_BASE = 7
-WRITE_SUBMIT = WRITE_DIGIT_BASE + len(DIGITS)
-WRITE_VOCAB_SIZE = WRITE_SUBMIT + 1
-# Input slot 17 is START; output slot 17 is SUBMIT and is never fed back.
-WRITE_START = WRITE_SUBMIT
-WRITE_INPUT_VOCAB_SIZE = WRITE_START + 1
+WRITE_BOUNDARY = WRITE_DIGIT_BASE + len(DIGITS)
+WRITE_VOCAB_SIZE = WRITE_BOUNDARY + 1
+WRITE_INPUT_VOCAB_SIZE = WRITE_VOCAB_SIZE
 
 
 READ_TOKEN_NAMES = {
@@ -73,7 +71,7 @@ WRITE_TOKEN_NAMES = {
     WRITE_SEP: "[WRITE_SEP]",
     WRITE_END: "[WRITE_END]",
     WRITE_USED: "[WRITE_USED]",
-    WRITE_SUBMIT: "[SUBMIT]",
+    WRITE_BOUNDARY: "[BOUNDARY]",
 }
 for i, digit in enumerate(DIGITS):
     READ_TOKEN_NAMES[READ_DIGIT_BASE + i] = f"[{digit}]"
@@ -103,10 +101,10 @@ def write_to_read(write):
         return READ_END
     if write == WRITE_USED:
         return READ_USED
-    if WRITE_DIGIT_BASE <= write < WRITE_SUBMIT:
+    if WRITE_DIGIT_BASE <= write < WRITE_BOUNDARY:
         return READ_DIGIT_BASE + (write - WRITE_DIGIT_BASE)
-    if write == WRITE_SUBMIT:
-        raise ValueError("WRITE_SUBMIT is a control action, not a tape symbol")
+    if write == WRITE_BOUNDARY:
+        raise ValueError("WRITE_BOUNDARY is a control action, not a tape symbol")
     raise ValueError(f"invalid write token {write}")
 
 
@@ -132,11 +130,11 @@ class TickTrajectory:
 
     @property
     def prev_head0_writes(self):
-        return [WRITE_START] + self.target_head0_writes[:-1]
+        return [WRITE_BOUNDARY] + self.target_head0_writes[:-1]
 
     @property
     def prev_head1_writes(self):
-        return [WRITE_START] + self.target_head1_writes[:-1]
+        return [WRITE_BOUNDARY] + self.target_head1_writes[:-1]
 
 
 class _Program:
@@ -243,7 +241,7 @@ def _simulate(task, initial_tape, program, answer):
 
         head0_write = program.head0_writes[i]
         head1_write = program.head1_writes[i]
-        if WRITE_SUBMIT in (head0_write, head1_write):
+        if WRITE_BOUNDARY in (head0_write, head1_write):
             if not output_is_complete():
                 raise AssertionError(f"{task}: program submitted an incorrect output")
             submitted_ticks = i + 1
@@ -411,7 +409,7 @@ def generate_add(a, b):
         output_start,
         answer,
     )
-    program.step(head0_write=WRITE_SUBMIT)
+    program.step(head0_write=WRITE_BOUNDARY)
     return _simulate("add", initial_tape, program, answer)
 
 
@@ -574,7 +572,7 @@ def generate_mul(a, b):
             program.step(head1_move=MOVE_RIGHT)
             program.step(head1_move=MOVE_RIGHT)
 
-    program.step(head0_write=WRITE_SUBMIT)
+    program.step(head0_write=WRITE_BOUNDARY)
     return _simulate("mul", initial_tape, program, answer)
 
 

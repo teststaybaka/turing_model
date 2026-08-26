@@ -13,8 +13,8 @@ next tick, including negative failure feedback.
 
 Several independent questions run in parallel. A fixed stage-2 question set is
 reshuffled and revisited for multiple dataset epochs. Evaluation reports
-success and tick count by episode index, both with state carry and with a fully
-fresh-state control.
+success and tick count by episode index with recurrent state carried across
+episodes.
 """
 
 import math
@@ -43,9 +43,8 @@ from continuous_arith_data_loader import (
     READ_SEP,
     READ_VOCAB_SIZE,
     WRITE_INPUT_VOCAB_SIZE,
+    WRITE_BOUNDARY,
     WRITE_NOOP,
-    WRITE_START,
-    WRITE_SUBMIT,
     WRITE_VOCAB_SIZE,
     generate_add,
     generate_mul,
@@ -95,7 +94,7 @@ POSITIVE_RETURN_DISCOUNT = 0.999
 MAX_GRAD_NORM = 1.0
 
 NUM_ACTION_FACTORS = 4
-START_ACTION = (MOVE_START, MOVE_START, WRITE_START, WRITE_START)
+START_ACTION = (MOVE_START, MOVE_START, WRITE_BOUNDARY, WRITE_BOUNDARY)
 
 config = GPTConfig(
     block_size=32,
@@ -531,7 +530,7 @@ class ArithmeticTapeEnvironment:
             if not (WRITE_NOOP <= write < WRITE_VOCAB_SIZE):
                 raise ValueError(f"invalid write token {write}")
 
-        if WRITE_SUBMIT in (head0_write, head1_write):
+        if WRITE_BOUNDARY in (head0_write, head1_write):
             self.previous_action = action
             return True
 
@@ -906,22 +905,8 @@ def reward_weighted_imitation_update(model, optimizer, trajectories):
 
 
 # --- Evaluation ---------------------------------------------------------------
-def reset_state_rows(states, reset_rows):
-    if states is None or not reset_rows.any():
-        return states
-    keep = (~reset_rows).to(dtype=states[0][0].dtype)
-    reset_states = []
-    for state in states:
-        reset_components = []
-        for component in state:
-            shape = (component.size(0),) + (1,) * (component.ndim - 1)
-            reset_components.append(component * keep.view(shape))
-        reset_states.append(tuple(reset_components))
-    return reset_states
-
-
 @torch.no_grad()
-def evaluate_trial_batch(model, items, carry_state):
+def evaluate_trial_batch(model, items):
     model.eval()
     trials = initialize_question_trials(items)
     successes = [0] * STAGE2_EPISODES_PER_TRIAL
@@ -971,8 +956,6 @@ def evaluate_trial_batch(model, items, carry_state):
             ],
             dim=-1,
         ).tolist()
-        reset_rows = torch.zeros(len(trials), dtype=torch.bool, device=DEVICE)
-
         for index, trial in enumerate(trials):
             if trial.done:
                 continue
@@ -989,14 +972,8 @@ def evaluate_trial_batch(model, items, carry_state):
                 if succeeded:
                     success_ticks[episode_index] += trial.episode_steps
                 trial.finish_episode(reward)
-                if not trial.done and not carry_state:
-                    trial.previous_reward = NO_REWARD
-                    reset_rows[index] = True
             else:
                 trial.previous_reward = NO_REWARD
-
-        if not carry_state:
-            states = reset_state_rows(states, reset_rows)
 
     return {
         "successes": successes,
@@ -1059,13 +1036,12 @@ def finalize_episode_statistics(statistics):
 
 
 @torch.no_grad()
-def evaluate_trials(model, items, carry_state):
+def evaluate_trials(model, items):
     totals = None
     for start in range(0, len(items), STAGE2_PARALLEL_TRIALS):
         statistics = evaluate_trial_batch(
             model,
             items[start : start + STAGE2_PARALLEL_TRIALS],
-            carry_state=carry_state,
         )
         totals = merge_episode_statistics(totals, statistics)
     return finalize_episode_statistics(totals)
@@ -1136,23 +1112,13 @@ def train_stage2(model, evaluation_model):
 
     for epoch in range(STAGE2_DATASET_EPOCHS):
         if epoch % STAGE2_EVAL_INTERVAL_EPOCHS == 0:
-            carry = evaluate_trials(
-                evaluation_model, validation_questions, carry_state=True
+            validation = evaluate_trials(evaluation_model, validation_questions)
+            message = format_episode_statistics(
+                f"stage2 epoch {epoch} val-carry", validation
             )
-            fresh = evaluate_trials(
-                evaluation_model, validation_questions, carry_state=False
-            )
-            for message in (
-                format_episode_statistics(
-                    f"stage2 epoch {epoch} val-carry", carry
-                ),
-                format_episode_statistics(
-                    f"stage2 epoch {epoch} val-fresh", fresh
-                ),
-            ):
-                print(message)
-                with open(log_file, "a") as log:
-                    log.write(message + "\n")
+            print(message)
+            with open(log_file, "a") as log:
+                log.write(message + "\n")
 
         rng.shuffle(train_questions)
         epoch_statistics = None
@@ -1208,15 +1174,13 @@ def train_stage2(model, evaluation_model):
         ("val", validation_questions),
         ("test-long", test_questions),
     ):
-        carry = evaluate_trials(evaluation_model, items, carry_state=True)
-        fresh = evaluate_trials(evaluation_model, items, carry_state=False)
-        for message in (
-            format_episode_statistics(f"stage2 final {label}-carry", carry),
-            format_episode_statistics(f"stage2 final {label}-fresh", fresh),
-        ):
-            print(message)
-            with open(log_file, "a") as log:
-                log.write(message + "\n")
+        result = evaluate_trials(evaluation_model, items)
+        message = format_episode_statistics(
+            f"stage2 final {label}-carry", result
+        )
+        print(message)
+        with open(log_file, "a") as log:
+            log.write(message + "\n")
 
 
 def save_checkpoint(path, model, stage):
@@ -1257,7 +1221,8 @@ def main():
     print("Latent input/output: none")
     print("Previous reward input: raw scalar")
     print("Episode termination: explicit submission or budget")
-    print("Policy sentinels: none; START is previous-action input only")
+    print("Write boundary: submits output and initializes previous writes")
+    print("Move START: previous-action input only")
     print("Stage 2 objective: positive-return weighted self-imitation")
     print("Stage 2 critic/GAE/entropy bonus: disabled")
     print(f"Stage 2 sampling temperature: {STAGE2_SAMPLING_TEMPERATURE}")
