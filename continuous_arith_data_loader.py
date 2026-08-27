@@ -30,8 +30,6 @@ MOVE_STAY = 0
 MOVE_LEFT = 1
 MOVE_RIGHT = 2
 MOVE_VOCAB_SIZE = 3
-MOVE_START = MOVE_VOCAB_SIZE
-MOVE_INPUT_VOCAB_SIZE = MOVE_VOCAB_SIZE + 1
 
 
 # --- Write action vocabulary -------------------------------------------------
@@ -45,7 +43,6 @@ WRITE_USED = 6
 WRITE_DIGIT_BASE = 7
 WRITE_BOUNDARY = WRITE_DIGIT_BASE + len(DIGITS)
 WRITE_VOCAB_SIZE = WRITE_BOUNDARY + 1
-WRITE_INPUT_VOCAB_SIZE = WRITE_VOCAB_SIZE
 
 
 READ_TOKEN_NAMES = {
@@ -58,7 +55,6 @@ READ_TOKEN_NAMES = {
     READ_USED: "[USED]",
 }
 MOVE_TOKEN_NAMES = {
-    MOVE_START: "[START]",
     MOVE_STAY: "[STAY]",
     MOVE_LEFT: "[LEFT]",
     MOVE_RIGHT: "[RIGHT]",
@@ -122,11 +118,11 @@ class TickTrajectory:
 
     @property
     def prev_head0_moves(self):
-        return [MOVE_START] + self.target_head0_moves[:-1]
+        return [MOVE_STAY] + self.target_head0_moves[:-1]
 
     @property
     def prev_head1_moves(self):
-        return [MOVE_START] + self.target_head1_moves[:-1]
+        return [MOVE_STAY] + self.target_head1_moves[:-1]
 
     @property
     def prev_head0_writes(self):
@@ -409,7 +405,10 @@ def generate_add(a, b):
         output_start,
         answer,
     )
-    program.step(head0_write=WRITE_BOUNDARY)
+    program.step(
+        head0_write=WRITE_BOUNDARY,
+        head1_write=WRITE_BOUNDARY,
+    )
     return _simulate("add", initial_tape, program, answer)
 
 
@@ -572,7 +571,10 @@ def generate_mul(a, b):
             program.step(head1_move=MOVE_RIGHT)
             program.step(head1_move=MOVE_RIGHT)
 
-    program.step(head0_write=WRITE_BOUNDARY)
+    program.step(
+        head0_write=WRITE_BOUNDARY,
+        head1_write=WRITE_BOUNDARY,
+    )
     return _simulate("mul", initial_tape, program, answer)
 
 

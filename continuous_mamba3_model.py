@@ -1,8 +1,13 @@
-"""Mamba-3 policy with optional critic and distinct action vocabularies.
+"""Mamba-3 recurrent transducer with tied input and output embeddings.
 
-Previous-action inputs may contain input-only sentinels such as START. Policy
-heads contain executable actions only, so sentinels never need logit masking.
-Streams in the same input group share an embedding table.
+Each categorical input stream occupies one fixed-width slice of the Mamba
+residual stream. The final residual stream is split into the same slices and
+decoded with the transposes of the corresponding input embedding tables. The
+categorical outputs therefore use exactly the same vocabularies as the inputs.
+
+Scalar streams use tied scalar-to-vector and vector-to-scalar projections. A
+single scalar stream is used for previous reward input and expected reward
+output in the continuous-episode experiment.
 """
 
 import math
@@ -21,27 +26,22 @@ class GPTConfig:
         ("read", 17),
     )
     action_input_streams: tuple[tuple[str, int], ...] = (
-        ("move", 4),
-        ("move", 4),
-        ("write", 18),
-        ("write", 18),
-    )
-    output_streams: tuple[tuple[str, int], ...] = (
         ("move", 3),
         ("move", 3),
         ("write", 18),
         ("write", 18),
     )
-    token_embd: int = 32
+    token_embd: int = 16
     n_layers: int = 12
-    n_heads: int = 12
-    n_embd: int = 768
+    n_heads: int = 4
     expand: int = 2
     d_state: int = 16
     mimo_rank: int = 1
-    critic_outputs: int = 1
-    use_latent: bool = True
-    scalar_input_dim: int = 0
+    num_scalar_streams: int = 1
+
+    @property
+    def stream_specs(self):
+        return self.input_streams + self.action_input_streams
 
     @property
     def num_inputs(self):
@@ -49,11 +49,17 @@ class GPTConfig:
 
     @property
     def num_outputs(self):
-        return len(self.output_streams)
+        return len(self.stream_specs)
 
     @property
     def num_action_inputs(self):
         return len(self.action_input_streams)
+
+    @property
+    def n_embd(self):
+        return (
+            self.num_outputs + self.num_scalar_streams
+        ) * self.token_embd
 
 
 def _rms_norm(x, weight, eps=1e-5):
@@ -221,20 +227,17 @@ class GPT(nn.Module):
         self.config = config
         if config.num_inputs == 0:
             raise ValueError("at least one input stream is required")
-        if config.num_outputs == 0:
-            raise ValueError("at least one output stream is required")
-        if config.num_action_inputs != config.num_outputs:
+        if config.num_scalar_streams < 0:
+            raise ValueError("num_scalar_streams cannot be negative")
+        if config.token_embd <= 0:
+            raise ValueError("token_embd must be positive")
+        if config.expand * config.n_embd % config.n_heads:
             raise ValueError(
-                "previous-action inputs must correspond to policy outputs"
+                "expanded embedding width must be divisible by n_heads"
             )
-        if config.critic_outputs < 0:
-            raise ValueError("critic_outputs cannot be negative")
-        if config.scalar_input_dim < 0:
-            raise ValueError("scalar_input_dim cannot be negative")
 
         group_vocab_sizes = {}
-        input_specs = config.input_streams + config.action_input_streams
-        for group, vocab_size in input_specs:
+        for group, vocab_size in config.stream_specs:
             if not group or "." in group:
                 raise ValueError(f"invalid embedding group name {group!r}")
             if vocab_size <= 0:
@@ -246,64 +249,24 @@ class GPT(nn.Module):
                     f"and {vocab_size} tokens"
                 )
 
-        for action_input, output in zip(
-            config.action_input_streams,
-            config.output_streams,
-        ):
-            input_group, input_vocab_size = action_input
-            output_group, output_vocab_size = output
-            if input_group != output_group:
-                raise ValueError(
-                    f"action group {input_group!r} does not match "
-                    f"output group {output_group!r}"
-                )
-            if output_vocab_size > input_vocab_size:
-                raise ValueError(
-                    f"output group {output_group!r} has more tokens than "
-                    "its previous-action input"
-                )
-
         self.stream_embeddings = nn.ModuleDict(
             {
                 group: nn.Embedding(vocab_size, config.token_embd)
                 for group, vocab_size in group_vocab_sizes.items()
             }
         )
-        self.input_mlp = SwiGLUProject(
-            (config.num_inputs + config.num_action_inputs) * config.token_embd
-            + config.scalar_input_dim
-            + (config.n_embd if config.use_latent else 0),
-            config.n_embd,
-        )
+        if config.num_scalar_streams:
+            self.scalar_embeddings = nn.Parameter(
+                torch.empty(config.num_scalar_streams, config.token_embd)
+            )
+        else:
+            self.register_parameter("scalar_embeddings", None)
         self.h = nn.ModuleList(Block(config) for _ in range(config.n_layers))
         self.ln_f = nn.LayerNorm(config.n_embd)
 
-        self.policy_mlps = nn.ModuleList(
-            SwiGLUProject(config.n_embd, config.n_embd)
-            for _ in config.output_streams
-        )
-        self.policy_lns = nn.ModuleList(
-            nn.LayerNorm(config.n_embd) for _ in config.output_streams
-        )
-        self.policy_heads = nn.ModuleList(
-            nn.Linear(config.n_embd, vocab_size, bias=False)
-            for _, vocab_size in config.output_streams
-        )
-        if config.use_latent:
-            self.latent_mlp = SwiGLUProject(config.n_embd, config.n_embd)
-            self.latent_ln = nn.LayerNorm(config.n_embd)
-        if config.critic_outputs:
-            self.critic_mlp = SwiGLUProject(config.n_embd, config.n_embd)
-            self.critic_ln = nn.LayerNorm(config.n_embd)
-            self.critic_head = nn.Linear(
-                config.n_embd, config.critic_outputs, bias=True
-            )
-        else:
-            self.critic_mlp = None
-            self.critic_ln = None
-            self.critic_head = None
-
         self.apply(self._init_weights)
+        if self.scalar_embeddings is not None:
+            nn.init.normal_(self.scalar_embeddings, mean=0.0, std=0.02)
         for module in self.modules():
             if isinstance(module, Mamba3Mixer):
                 module.reset_dt_bias()
@@ -316,7 +279,7 @@ class GPT(nn.Module):
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def _build_input(self, reads, prev_actions, latent, scalar_inputs):
+    def _build_input(self, reads, prev_actions, scalar_inputs):
         if reads.size(-1) != self.config.num_inputs:
             raise ValueError(
                 f"expected {self.config.num_inputs} input streams, "
@@ -339,10 +302,10 @@ class GPT(nn.Module):
             )
         )
         reference = pieces[0]
-        if self.config.scalar_input_dim:
+        if self.config.num_scalar_streams:
             expected_shape = (
                 *reference.shape[:-1],
-                self.config.scalar_input_dim,
+                self.config.num_scalar_streams,
             )
             if scalar_inputs is None or scalar_inputs.shape != expected_shape:
                 actual_shape = (
@@ -352,39 +315,29 @@ class GPT(nn.Module):
                     f"expected scalar input shape {expected_shape}, "
                     f"got {actual_shape}"
                 )
-            pieces.append(
-                scalar_inputs.to(device=reference.device, dtype=reference.dtype)
+            scalar_inputs = scalar_inputs.to(
+                device=reference.device,
+                dtype=reference.dtype,
             )
+            scalar_slots = (
+                scalar_inputs.unsqueeze(-1) * self.scalar_embeddings
+            )
+            pieces.extend(scalar_slots.unbind(dim=-2))
         elif scalar_inputs is not None:
             raise ValueError(
-                "scalar inputs require scalar_input_dim to be positive"
+                "scalar inputs require num_scalar_streams to be positive"
             )
-        if self.config.use_latent:
-            if latent is None:
-                latent = reference.new_zeros(
-                    *reference.shape[:-1], self.config.n_embd
-                )
-            expected_shape = (*reference.shape[:-1], self.config.n_embd)
-            if latent.shape != expected_shape:
-                raise ValueError(
-                    f"expected latent shape {expected_shape}, "
-                    f"got {tuple(latent.shape)}"
-                )
-            pieces.append(latent.to(dtype=reference.dtype))
-        elif latent is not None:
-            raise ValueError("latent input requires use_latent=True")
-        return self.input_mlp(torch.cat(pieces, dim=-1))
+        return torch.cat(pieces, dim=-1)
 
     def forward(
         self,
         reads,
         prev_actions,
-        latent=None,
         states=None,
         scalar_inputs=None,
     ):
-        """Return a four-tuple with latent enabled, otherwise a three-tuple."""
-        x = self._build_input(reads, prev_actions, latent, scalar_inputs)
+        """Return tied categorical logits, scalar predictions, and states."""
+        x = self._build_input(reads, prev_actions, scalar_inputs)
         new_states = []
         for layer_idx, block in enumerate(self.h):
             layer_state = None if states is None else states[layer_idx]
@@ -392,18 +345,22 @@ class GPT(nn.Module):
             new_states.append(new_state)
         x = self.ln_f(x)
 
+        slots = x.split(self.config.token_embd, dim=-1)
+        token_slots = slots[: self.config.num_outputs]
         logits = tuple(
-            head(norm(mlp(x)))
-            for mlp, norm, head in zip(
-                self.policy_mlps,
-                self.policy_lns,
-                self.policy_heads,
+            F.linear(slot, self.stream_embeddings[group].weight)
+            for slot, (group, _) in zip(
+                token_slots,
+                self.config.stream_specs,
             )
         )
-        values = None
-        if self.critic_head is not None:
-            values = self.critic_head(self.critic_ln(self.critic_mlp(x)))
-        if self.config.use_latent:
-            latent_out = self.latent_ln(self.latent_mlp(x))
-            return logits, values, latent_out, new_states
-        return logits, values, new_states
+        scalar_outputs = None
+        if self.config.num_scalar_streams:
+            scalar_slots = torch.stack(
+                slots[self.config.num_outputs :],
+                dim=-2,
+            )
+            scalar_outputs = (
+                scalar_slots * self.scalar_embeddings
+            ).sum(dim=-1)
+        return logits, scalar_outputs, new_states

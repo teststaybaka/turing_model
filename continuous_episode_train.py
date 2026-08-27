@@ -1,15 +1,17 @@
 """Repeated-question positive self-imitation for arithmetic tapes.
 
-Stage 1 briefly behavior-clones generated arithmetic trajectories. It stops at
-a configurable held-out tick accuracy (or a hard step limit).
+Stage 1 briefly behavior-clones generated arithmetic trajectories while also
+predicting each next tape read and the immediate reward. It stops at a
+configurable held-out action accuracy (or a hard step limit).
 
 Stage 2 treats one question as a trial containing several fresh tape episodes.
 An episode ends when either head submits the output or its movement budget is
 exhausted. The tape resets to the same question while the Mamba state persists.
 Only positive success rewards contribute to the policy loss. Their discounted
-Monte Carlo returns cross episode boundaries, while failed trials produce no
-optimizer update. The previous scalar reward remains an explicit input on the
-next tick, including negative failure feedback.
+Monte Carlo returns cross episode boundaries. Every transition still trains
+the next-read and immediate-reward predictors, including failed trials. The
+previous scalar reward remains an explicit input on the next tick, including
+negative failure feedback.
 
 Several independent questions run in parallel. A fixed stage-2 question set is
 reshuffled and revisited for multiple dataset epochs. Evaluation reports
@@ -29,10 +31,8 @@ import torch.nn.functional as F
 from continuous_arith_data_loader import (
     ArithmeticTickDataLoader,
     ArithmeticTickDataset,
-    MOVE_INPUT_VOCAB_SIZE,
     MOVE_LEFT,
     MOVE_RIGHT,
-    MOVE_START,
     MOVE_STAY,
     MOVE_VOCAB_SIZE,
     READ_ADD,
@@ -42,7 +42,6 @@ from continuous_arith_data_loader import (
     READ_PAD,
     READ_SEP,
     READ_VOCAB_SIZE,
-    WRITE_INPUT_VOCAB_SIZE,
     WRITE_BOUNDARY,
     WRITE_NOOP,
     WRITE_VOCAB_SIZE,
@@ -92,9 +91,17 @@ FAILURE_REWARD = -1.0
 NO_REWARD = 0.0
 POSITIVE_RETURN_DISCOUNT = 0.999
 MAX_GRAD_NORM = 1.0
+READ_PREDICTION_LOSS_COEF = 1.0
+REWARD_PREDICTION_LOSS_COEF = 1.0
 
+NUM_READ_FACTORS = 2
 NUM_ACTION_FACTORS = 4
-START_ACTION = (MOVE_START, MOVE_START, WRITE_BOUNDARY, WRITE_BOUNDARY)
+EPISODE_BOUNDARY_ACTION = (
+    MOVE_STAY,
+    MOVE_STAY,
+    WRITE_BOUNDARY,
+    WRITE_BOUNDARY,
+)
 
 config = GPTConfig(
     block_size=32,
@@ -103,12 +110,6 @@ config = GPTConfig(
         ("read", READ_VOCAB_SIZE),
     ),
     action_input_streams=(
-        ("move", MOVE_INPUT_VOCAB_SIZE),
-        ("move", MOVE_INPUT_VOCAB_SIZE),
-        ("write", WRITE_INPUT_VOCAB_SIZE),
-        ("write", WRITE_INPUT_VOCAB_SIZE),
-    ),
-    output_streams=(
         ("move", MOVE_VOCAB_SIZE),
         ("move", MOVE_VOCAB_SIZE),
         ("write", WRITE_VOCAB_SIZE),
@@ -117,10 +118,7 @@ config = GPTConfig(
     token_embd=32,
     n_layers=4,
     n_heads=4,
-    n_embd=64,
-    critic_outputs=0,
-    use_latent=False,
-    scalar_input_dim=1,
+    num_scalar_streams=1,
 )
 
 log_dir = "log"
@@ -237,13 +235,35 @@ def unpack_stage1_batch(batch, device):
         ),
         dim=-1,
     )
-    targets = (
+    action_targets = (
         target_head0_moves,
         target_head1_moves,
         target_head0_writes,
         target_head1_writes,
     )
-    return reads, previous_rewards, previous_actions, targets, mask
+    next_reads = torch.full_like(reads, READ_PAD)
+    if reads.size(1) > 1:
+        next_reads[:, :-1] = reads[:, 1:]
+    lengths = mask.sum(dim=1).long()
+    valid_rows = lengths.gt(0)
+    row_indices = torch.arange(reads.size(0), device=device)[valid_rows]
+    final_indices = lengths[valid_rows] - 1
+    next_reads[row_indices, final_indices] = reads[row_indices, 0]
+
+    reward_targets = mask.new_zeros((*mask.shape, 1))
+    reward_targets[row_indices, final_indices, 0] = SUCCESS_REWARD
+    read_targets = tuple(
+        next_reads[..., index] for index in range(NUM_READ_FACTORS)
+    )
+    return (
+        reads,
+        previous_rewards,
+        previous_actions,
+        read_targets,
+        action_targets,
+        reward_targets,
+        mask,
+    )
 
 
 def recurrent_forward_chunked(
@@ -255,10 +275,10 @@ def recurrent_forward_chunked(
     """Retain the Mamba graph across chunks for full-sequence BPTT."""
     states = None
     logits_by_factor = [[] for _ in range(config.num_outputs)]
-    values = [] if config.critic_outputs else None
+    scalar_outputs = [] if config.num_scalar_streams else None
     for start in range(0, reads.size(1), config.block_size):
         end = min(start + config.block_size, reads.size(1))
-        logits, chunk_values, states = model(
+        logits, chunk_scalars, states = model(
             reads[:, start:end].contiguous(),
             previous_actions[:, start:end].contiguous(),
             states=states,
@@ -266,18 +286,25 @@ def recurrent_forward_chunked(
         )
         for factor, factor_logits in enumerate(logits):
             logits_by_factor[factor].append(factor_logits)
-        if values is not None:
-            values.append(chunk_values.squeeze(-1))
+        if scalar_outputs is not None:
+            scalar_outputs.append(chunk_scalars)
     return (
         tuple(
             torch.cat(factor_parts, dim=1)
             for factor_parts in logits_by_factor
         ),
-        None if values is None else torch.cat(values, dim=1),
+        None if scalar_outputs is None else torch.cat(scalar_outputs, dim=1),
     )
 
 
-def factorized_imitation_loss(logits, targets, mask):
+def factorized_cross_entropy(logits, targets, mask):
+    if len(logits) != len(targets):
+        raise ValueError(
+            f"received {len(logits)} logits but {len(targets)} targets"
+        )
+    factor_count = len(logits)
+    if factor_count == 0:
+        raise ValueError("at least one categorical factor is required")
     loss_sum = mask.new_tensor(0.0)
     factor_correct = torch.zeros_like(mask)
     tick_correct = torch.ones_like(mask, dtype=torch.bool)
@@ -293,11 +320,58 @@ def factorized_imitation_loss(logits, targets, mask):
         tick_correct &= correct
 
     valid_ticks = mask.sum().clamp_min(1.0)
-    return loss_sum / (valid_ticks * NUM_ACTION_FACTORS), {
+    return loss_sum / (valid_ticks * factor_count), {
         "factor_accuracy": (
-            (factor_correct * mask).sum() / (valid_ticks * NUM_ACTION_FACTORS)
+            (factor_correct * mask).sum() / (valid_ticks * factor_count)
         ).detach(),
         "tick_accuracy": masked_mean(tick_correct.float(), mask).detach(),
+    }
+
+
+def scalar_regression_loss(outputs, targets, mask):
+    errors = outputs - targets
+    loss = masked_mean(errors.square().mean(dim=-1), mask)
+    mae = masked_mean(errors.abs().mean(dim=-1), mask)
+    return loss, mae
+
+
+def transition_supervision_loss(
+    logits,
+    scalar_outputs,
+    read_targets,
+    action_targets,
+    reward_targets,
+    mask,
+):
+    read_loss, read_metrics = factorized_cross_entropy(
+        logits[:NUM_READ_FACTORS],
+        read_targets,
+        mask,
+    )
+    action_loss, action_metrics = factorized_cross_entropy(
+        logits[NUM_READ_FACTORS:],
+        action_targets,
+        mask,
+    )
+    reward_loss, reward_mae = scalar_regression_loss(
+        scalar_outputs,
+        reward_targets,
+        mask,
+    )
+    loss = (
+        action_loss
+        + READ_PREDICTION_LOSS_COEF * read_loss
+        + REWARD_PREDICTION_LOSS_COEF * reward_loss
+    )
+    return loss, {
+        "action_loss": action_loss.detach(),
+        "read_loss": read_loss.detach(),
+        "reward_loss": reward_loss.detach(),
+        "action_factor_accuracy": action_metrics["factor_accuracy"],
+        "action_tick_accuracy": action_metrics["tick_accuracy"],
+        "read_factor_accuracy": read_metrics["factor_accuracy"],
+        "read_tick_accuracy": read_metrics["tick_accuracy"],
+        "reward_mae": reward_mae.detach(),
     }
 
 
@@ -305,25 +379,55 @@ def factorized_imitation_loss(logits, targets, mask):
 @torch.no_grad()
 def evaluate_stage1(model, loader):
     model.eval()
-    totals = {"loss": 0.0, "factor_accuracy": 0.0, "tick_accuracy": 0.0}
+    metric_names = (
+        "loss",
+        "action_loss",
+        "read_loss",
+        "reward_loss",
+        "action_factor_accuracy",
+        "action_tick_accuracy",
+        "read_factor_accuracy",
+        "read_tick_accuracy",
+        "reward_mae",
+    )
+    totals = {name: 0.0 for name in metric_names}
     total_ticks = 0
     for batch in loader:
-        reads, previous_rewards, previous_actions, targets, mask = (
-            unpack_stage1_batch(batch, DEVICE)
-        )
+        (
+            reads,
+            previous_rewards,
+            previous_actions,
+            read_targets,
+            action_targets,
+            reward_targets,
+            mask,
+        ) = unpack_stage1_batch(batch, DEVICE)
         sequence_length = int(mask.sum(dim=1).max().item())
         reads = reads[:, :sequence_length]
         previous_rewards = previous_rewards[:, :sequence_length]
         previous_actions = previous_actions[:, :sequence_length]
-        targets = tuple(target[:, :sequence_length] for target in targets)
+        read_targets = tuple(
+            target[:, :sequence_length] for target in read_targets
+        )
+        action_targets = tuple(
+            target[:, :sequence_length] for target in action_targets
+        )
+        reward_targets = reward_targets[:, :sequence_length]
         active_mask = mask[:, :sequence_length]
-        logits, _ = recurrent_forward_chunked(
+        logits, scalar_outputs = recurrent_forward_chunked(
             model,
             reads,
             previous_rewards,
             previous_actions,
         )
-        loss, metrics = factorized_imitation_loss(logits, targets, active_mask)
+        loss, metrics = transition_supervision_loss(
+            logits,
+            scalar_outputs,
+            read_targets,
+            action_targets,
+            reward_targets,
+            active_mask,
+        )
         ticks = int(active_mask.sum().item())
         totals["loss"] += float(loss.item()) * ticks
         for name, value in metrics.items():
@@ -393,15 +497,21 @@ def train_stage1(model, evaluation_model):
             message = (
                 f"stage1 {completed_steps:4d}/{total_steps} val | "
                 f"loss {validation['loss']:.4f} | "
-                f"factor_acc {validation['factor_accuracy']:.4f} | "
-                f"tick_acc {validation['tick_accuracy']:.4f}"
+                f"action {validation['action_loss']:.4f} | "
+                f"read {validation['read_loss']:.4f} | "
+                f"reward {validation['reward_loss']:.4f} | "
+                f"action_acc {validation['action_factor_accuracy']:.4f} | "
+                f"tick_acc {validation['action_tick_accuracy']:.4f} | "
+                f"read_acc {validation['read_factor_accuracy']:.4f} | "
+                f"reward_mae {validation['reward_mae']:.4f}"
             )
             print(message)
             with open(log_file, "a") as log:
                 log.write(message + "\n")
             if (
                 completed_steps >= STAGE1_MIN_STEPS
-                and validation["tick_accuracy"] >= STAGE1_STOP_TICK_ACCURACY
+                and validation["action_tick_accuracy"]
+                >= STAGE1_STOP_TICK_ACCURACY
             ):
                 print("Stage 1 stopped at the configured validation accuracy")
                 break
@@ -413,38 +523,66 @@ def train_stage1(model, evaluation_model):
         model.train()
         optimizer.zero_grad(set_to_none=True)
         started = time.time()
-        accumulated_loss = 0.0
-        accumulated_factor_accuracy = 0.0
-        accumulated_tick_accuracy = 0.0
+        accumulated = {
+            name: 0.0
+            for name in (
+                "loss",
+                "action_loss",
+                "read_loss",
+                "reward_loss",
+                "action_factor_accuracy",
+                "action_tick_accuracy",
+                "read_factor_accuracy",
+                "reward_mae",
+            )
+        }
         for _ in range(STAGE1_GRAD_ACCUM_STEPS):
             batch = next(batches)
-            reads, previous_rewards, previous_actions, targets, mask = (
-                unpack_stage1_batch(batch, DEVICE)
-            )
+            (
+                reads,
+                previous_rewards,
+                previous_actions,
+                read_targets,
+                action_targets,
+                reward_targets,
+                mask,
+            ) = unpack_stage1_batch(batch, DEVICE)
             sequence_length = int(mask.sum(dim=1).max().item())
             reads = reads[:, :sequence_length]
             previous_rewards = previous_rewards[:, :sequence_length]
             previous_actions = previous_actions[:, :sequence_length]
-            targets = tuple(target[:, :sequence_length] for target in targets)
+            read_targets = tuple(
+                target[:, :sequence_length] for target in read_targets
+            )
+            action_targets = tuple(
+                target[:, :sequence_length] for target in action_targets
+            )
+            reward_targets = reward_targets[:, :sequence_length]
             active_mask = mask[:, :sequence_length]
 
-            logits, _ = recurrent_forward_chunked(
+            logits, scalar_outputs = recurrent_forward_chunked(
                 model,
                 reads,
                 previous_rewards,
                 previous_actions,
             )
-            loss, metrics = factorized_imitation_loss(
-                logits, targets, active_mask
+            loss, metrics = transition_supervision_loss(
+                logits,
+                scalar_outputs,
+                read_targets,
+                action_targets,
+                reward_targets,
+                active_mask,
             )
             (loss / STAGE1_GRAD_ACCUM_STEPS).backward()
-            accumulated_loss += float(loss.detach()) / STAGE1_GRAD_ACCUM_STEPS
-            accumulated_factor_accuracy += (
-                float(metrics["factor_accuracy"]) / STAGE1_GRAD_ACCUM_STEPS
+            accumulated["loss"] += (
+                float(loss.detach()) / STAGE1_GRAD_ACCUM_STEPS
             )
-            accumulated_tick_accuracy += (
-                float(metrics["tick_accuracy"]) / STAGE1_GRAD_ACCUM_STEPS
-            )
+            for name, value in metrics.items():
+                if name in accumulated:
+                    accumulated[name] += (
+                        float(value) / STAGE1_GRAD_ACCUM_STEPS
+                    )
 
         gradient_norm = torch.nn.utils.clip_grad_norm_(
             model.parameters(), MAX_GRAD_NORM
@@ -453,9 +591,14 @@ def train_stage1(model, evaluation_model):
         completed_steps += 1
         print(
             f"stage1 {completed_steps:4d}/{total_steps} | "
-            f"loss {accumulated_loss:.4f} | "
-            f"factor_acc {accumulated_factor_accuracy:.4f} | "
-            f"tick_acc {accumulated_tick_accuracy:.4f} | "
+            f"loss {accumulated['loss']:.4f} | "
+            f"action {accumulated['action_loss']:.4f} | "
+            f"read {accumulated['read_loss']:.4f} | "
+            f"reward {accumulated['reward_loss']:.4f} | "
+            f"action_acc {accumulated['action_factor_accuracy']:.4f} | "
+            f"tick_acc {accumulated['action_tick_accuracy']:.4f} | "
+            f"read_acc {accumulated['read_factor_accuracy']:.4f} | "
+            f"reward_mae {accumulated['reward_mae']:.4f} | "
             f"norm {float(gradient_norm):.4f} | "
             f"lr {learning_rate:.2e} | dt {time.time() - started:.2f}s"
         )
@@ -465,8 +608,13 @@ def train_stage1(model, evaluation_model):
     for label, result in (("val", validation), ("test-long", test)):
         message = (
             f"stage1 final {label} | loss {result['loss']:.4f} | "
-            f"factor_acc {result['factor_accuracy']:.4f} | "
-            f"tick_acc {result['tick_accuracy']:.4f}"
+            f"action {result['action_loss']:.4f} | "
+            f"read {result['read_loss']:.4f} | "
+            f"reward {result['reward_loss']:.4f} | "
+            f"action_acc {result['action_factor_accuracy']:.4f} | "
+            f"tick_acc {result['action_tick_accuracy']:.4f} | "
+            f"read_acc {result['read_factor_accuracy']:.4f} | "
+            f"reward_mae {result['reward_mae']:.4f}"
         )
         print(message)
         with open(log_file, "a") as log:
@@ -508,7 +656,11 @@ class ArithmeticTapeEnvironment:
         )
         self.head0 = 0
         self.head1 = 0
-        self.previous_action = START_ACTION
+        self.previous_action = EPISODE_BOUNDARY_ACTION
+
+    def initial_reads(self):
+        operation = READ_ADD if self.task == "add" else READ_MUL
+        return operation, operation
 
     def reads(self):
         return (
@@ -600,6 +752,7 @@ class QuestionTrial:
 @dataclass
 class TrialTrajectory:
     reads: torch.Tensor
+    next_reads: torch.Tensor
     previous_rewards: torch.Tensor
     previous_actions: torch.Tensor
     actions: torch.Tensor
@@ -680,6 +833,7 @@ def collect_trial_batch(model, items):
     buffers = [
         {
             "reads": [],
+            "next_reads": [],
             "previous_rewards": [],
             "previous_actions": [],
             "actions": [],
@@ -728,7 +882,7 @@ def collect_trial_batch(model, items):
             states=states,
             scalar_inputs=previous_rewards,
         )
-        actions = sample_factorized_actions(logits)
+        actions = sample_factorized_actions(logits[NUM_READ_FACTORS:])
         action_rows = actions.tolist()
 
         for index, trial in enumerate(trials):
@@ -737,6 +891,11 @@ def collect_trial_batch(model, items):
             episode_index = trial.episode_index
             action = tuple(action_rows[index])
             episode_done, succeeded, reward = step_trial_episode(trial, action)
+            next_reads = (
+                trial.environment.initial_reads()
+                if episode_done
+                else trial.environment.reads()
+            )
             if episode_done:
                 successes[episode_index] += int(succeeded)
                 ticks[episode_index] += trial.episode_steps
@@ -746,6 +905,7 @@ def collect_trial_batch(model, items):
 
             buffer = buffers[index]
             buffer["reads"].append(read_rows[index])
+            buffer["next_reads"].append(next_reads)
             buffer["previous_rewards"].append(
                 previous_reward_rows[index][0]
             )
@@ -763,6 +923,9 @@ def collect_trial_batch(model, items):
     for buffer in buffers:
         trajectory = TrialTrajectory(
             reads=torch.tensor(buffer["reads"], dtype=torch.long),
+            next_reads=torch.tensor(
+                buffer["next_reads"], dtype=torch.long
+            ),
             previous_rewards=torch.tensor(
                 buffer["previous_rewards"], dtype=torch.float32
             ).unsqueeze(-1),
@@ -802,7 +965,7 @@ def collate_trajectories(trajectories):
     previous_rewards = torch.zeros(
         batch_size,
         padded_ticks,
-        config.scalar_input_dim,
+        config.num_scalar_streams,
         dtype=torch.float32,
     )
     previous_actions = torch.empty(
@@ -811,15 +974,24 @@ def collate_trajectories(trajectories):
     previous_actions[..., :2] = MOVE_STAY
     previous_actions[..., 2:] = WRITE_NOOP
     actions = previous_actions.clone()
+    next_reads = torch.full_like(reads, READ_PAD)
+    rewards = torch.zeros(
+        batch_size,
+        padded_ticks,
+        config.num_scalar_streams,
+        dtype=torch.float32,
+    )
     positive_returns = torch.zeros(batch_size, padded_ticks)
     mask = torch.zeros(batch_size, padded_ticks)
 
     for row, trajectory in enumerate(trajectories):
         length = trajectory.num_ticks
         reads[row, :length] = trajectory.reads
+        next_reads[row, :length] = trajectory.next_reads
         previous_rewards[row, :length] = trajectory.previous_rewards
         previous_actions[row, :length] = trajectory.previous_actions
         actions[row, :length] = trajectory.actions
+        rewards[row, :length, 0] = trajectory.rewards
         positive_returns[row, :length] = trajectory.positive_returns
         mask[row, :length] = 1.0
 
@@ -830,6 +1002,8 @@ def collate_trajectories(trajectories):
             previous_rewards,
             previous_actions,
             actions,
+            next_reads,
+            rewards,
             positive_returns,
             mask,
         )
@@ -855,12 +1029,14 @@ def fixed_action_statistics(logits, actions):
     )
 
 
-def reward_weighted_imitation_update(model, optimizer, trajectories):
+def stage2_update(model, optimizer, trajectories):
     (
         reads,
         previous_rewards,
         previous_actions,
         actions,
+        next_reads,
+        rewards,
         positive_returns,
         mask,
     ) = collate_trajectories(trajectories)
@@ -869,26 +1045,39 @@ def reward_weighted_imitation_update(model, optimizer, trajectories):
     valid_ticks = mask.sum().clamp_min(1.0)
     rewarded_ticks = weights.gt(0).logical_and(mask.bool()).sum()
     optimizer.zero_grad(set_to_none=True)
-    if weight_sum.item() == 0.0:
-        return {
-            "loss": 0.0,
-            "entropy": float("nan"),
-            "gradient_norm": 0.0,
-            "rewarded_fraction": 0.0,
-            "mean_weight": 0.0,
-            "updated": False,
-        }
 
     model.train()
-    logits, _ = recurrent_forward_chunked(
+    logits, scalar_outputs = recurrent_forward_chunked(
         model,
         reads,
         previous_rewards,
         previous_actions,
     )
-    log_probs, entropies = fixed_action_statistics(logits, actions)
-    loss = ((-log_probs / NUM_ACTION_FACTORS) * weights).sum() / weight_sum
+    read_loss, read_metrics = factorized_cross_entropy(
+        logits[:NUM_READ_FACTORS],
+        tuple(next_reads[..., index] for index in range(NUM_READ_FACTORS)),
+        mask,
+    )
+    reward_loss, reward_mae = scalar_regression_loss(
+        scalar_outputs,
+        rewards,
+        mask,
+    )
+
+    action_logits = logits[NUM_READ_FACTORS:]
+    log_probs, entropies = fixed_action_statistics(action_logits, actions)
+    if weight_sum.item() > 0.0:
+        policy_loss = (
+            (-log_probs / NUM_ACTION_FACTORS) * weights
+        ).sum() / weight_sum
+    else:
+        policy_loss = read_loss.new_zeros(())
     entropy = masked_mean(entropies / NUM_ACTION_FACTORS, mask)
+    loss = (
+        policy_loss
+        + READ_PREDICTION_LOSS_COEF * read_loss
+        + REWARD_PREDICTION_LOSS_COEF * reward_loss
+    )
     loss.backward()
     gradient_norm = torch.nn.utils.clip_grad_norm_(
         model.parameters(), MAX_GRAD_NORM
@@ -896,6 +1085,11 @@ def reward_weighted_imitation_update(model, optimizer, trajectories):
     optimizer.step()
     return {
         "loss": float(loss.detach()),
+        "policy_loss": float(policy_loss.detach()),
+        "read_loss": float(read_loss.detach()),
+        "reward_loss": float(reward_loss.detach()),
+        "read_accuracy": float(read_metrics["factor_accuracy"]),
+        "reward_mae": float(reward_mae.detach()),
         "entropy": float(entropy.detach()),
         "gradient_norm": float(gradient_norm),
         "rewarded_fraction": float(rewarded_ticks / valid_ticks),
@@ -952,7 +1146,7 @@ def evaluate_trial_batch(model, items):
         actions = torch.stack(
             [
                 factor_logits[:, 0].argmax(dim=-1)
-                for factor_logits in logits
+                for factor_logits in logits[NUM_READ_FACTORS:]
             ],
             dim=-1,
         ).tolist()
@@ -1130,7 +1324,7 @@ def train_stage2(model, evaluation_model):
             trajectories, rollout = collect_trial_batch(
                 evaluation_model, batch_items
             )
-            metrics = reward_weighted_imitation_update(
+            metrics = stage2_update(
                 model, optimizer, trajectories
             )
             completed_batches += 1
@@ -1145,6 +1339,11 @@ def train_stage2(model, evaluation_model):
                 f"updates {optimizer_updates} | "
                 f"epoch {epoch + 1}/{STAGE2_DATASET_EPOCHS} | "
                 f"loss {metrics['loss']:.4f} | "
+                f"policy {metrics['policy_loss']:.4f} | "
+                f"read {metrics['read_loss']:.4f} | "
+                f"reward_pred {metrics['reward_loss']:.4f} | "
+                f"read_acc {metrics['read_accuracy']:.3f} | "
+                f"reward_mae {metrics['reward_mae']:.3f} | "
                 f"success {successful_episodes}/{episode_count} | "
                 f"rewarded {metrics['rewarded_fraction']:.3f} | "
                 f"weight {metrics['mean_weight']:.3f} | "
@@ -1192,8 +1391,16 @@ def save_checkpoint(path, model, stage):
 
 
 def main():
-    if config.scalar_input_dim != 1:
-        raise ValueError("repeated-question training requires one reward input")
+    if config.num_scalar_streams != 1:
+        raise ValueError(
+            "repeated-question training requires one reward stream"
+        )
+    if config.num_inputs != NUM_READ_FACTORS:
+        raise ValueError("read stream count does not match the trainer")
+    if config.num_action_inputs != NUM_ACTION_FACTORS:
+        raise ValueError("action stream count does not match the trainer")
+    if config.num_outputs != NUM_READ_FACTORS + NUM_ACTION_FACTORS:
+        raise ValueError("categorical stream count does not match the trainer")
     if STAGE2_EPISODES_PER_TRIAL <= 0:
         raise ValueError("STAGE2_EPISODES_PER_TRIAL must be positive")
     if STAGE2_PARALLEL_TRIALS <= 0:
@@ -1218,11 +1425,14 @@ def main():
     print(f"Episodes per trial: {STAGE2_EPISODES_PER_TRIAL}")
     print(f"Parallel trials: {STAGE2_PARALLEL_TRIALS}")
     print(f"Stage 2 dataset epochs: {STAGE2_DATASET_EPOCHS}")
-    print("Latent input/output: none")
-    print("Previous reward input: raw scalar")
+    print(f"Categorical slot width: {config.token_embd}")
+    print(f"Mamba embedding width: {config.n_embd}")
+    print("Input/output embeddings: tied")
+    print("Next-read prediction: enabled")
+    print("Previous/expected reward projection: tied")
     print("Episode termination: explicit submission or budget")
     print("Write boundary: submits output and initializes previous writes")
-    print("Move START: previous-action input only")
+    print("Initial previous moves: STAY")
     print("Stage 2 objective: positive-return weighted self-imitation")
     print("Stage 2 critic/GAE/entropy bonus: disabled")
     print(f"Stage 2 sampling temperature: {STAGE2_SAMPLING_TEMPERATURE}")
