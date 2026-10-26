@@ -1,0 +1,9542 @@
+{
+  "version": 2,
+  "name": "binary_task_suite_v2_16cells",
+  "tape_cells": 16,
+  "symbols": [
+    0,
+    1
+  ],
+  "layout": {
+    "operator": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "data": [
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "answer": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ]
+  },
+  "protected_cells": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "bit_order": "most_significant_first",
+  "data_interpretation": "abcde; x=16a+8b+4c+2d+e; A=4a+2b+c; B=2d+e",
+  "initialization": "independent_uniform_binary_answer_each_rollout",
+  "verification": "explicit_SUBMIT_only",
+  "immediate_submit_baseline": 0.015625,
+  "split": {
+    "seed": 20261021,
+    "method": "8 randomly held-out inputs per operator",
+    "training_cases": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      8,
+      9,
+      10,
+      11,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      24,
+      25,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      34,
+      35,
+      37,
+      38,
+      39,
+      41,
+      42,
+      44,
+      45,
+      46,
+      47,
+      48,
+      50,
+      51,
+      52,
+      53,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      63,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      82,
+      84,
+      85,
+      86,
+      87,
+      89,
+      90,
+      91,
+      95,
+      96,
+      97,
+      100,
+      101,
+      102,
+      106,
+      107,
+      108,
+      109,
+      110,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      120,
+      121,
+      122,
+      123,
+      124,
+      126,
+      127,
+      129,
+      130,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      140,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      150,
+      151,
+      153,
+      154,
+      155,
+      156,
+      157,
+      158,
+      159,
+      160,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      171,
+      173,
+      174,
+      177,
+      178,
+      180,
+      182,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188,
+      190,
+      192,
+      193,
+      194,
+      195,
+      196,
+      199,
+      200,
+      203,
+      204,
+      206,
+      207,
+      209,
+      210,
+      211,
+      214,
+      215,
+      216,
+      217,
+      218,
+      219,
+      220,
+      221,
+      222,
+      223,
+      224,
+      225,
+      226,
+      227,
+      228,
+      229,
+      232,
+      233,
+      234,
+      235,
+      236,
+      239,
+      240,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      249,
+      250,
+      252,
+      253,
+      255,
+      256,
+      257,
+      258,
+      260,
+      261,
+      263,
+      265,
+      269,
+      270,
+      271,
+      272,
+      273,
+      274,
+      275,
+      276,
+      277,
+      278,
+      279,
+      280,
+      281,
+      282,
+      284,
+      285,
+      287,
+      289,
+      290,
+      292,
+      293,
+      294,
+      295,
+      296,
+      297,
+      300,
+      301,
+      302,
+      303,
+      305,
+      306,
+      307,
+      308,
+      309,
+      310,
+      311,
+      314,
+      315,
+      317,
+      318,
+      319,
+      320,
+      321,
+      322,
+      326,
+      327,
+      328,
+      329,
+      331,
+      333,
+      334,
+      335,
+      336,
+      337,
+      338,
+      339,
+      341,
+      342,
+      343,
+      344,
+      346,
+      347,
+      349,
+      350,
+      351,
+      352,
+      353,
+      354,
+      355,
+      356,
+      359,
+      360,
+      361,
+      362,
+      364,
+      365,
+      367,
+      368,
+      369,
+      372,
+      373,
+      374,
+      375,
+      376,
+      377,
+      380,
+      381,
+      382,
+      383,
+      385,
+      387,
+      389,
+      390,
+      391,
+      393,
+      394,
+      395,
+      397,
+      398,
+      399,
+      400,
+      401,
+      402,
+      403,
+      405,
+      406,
+      407,
+      409,
+      411,
+      412,
+      413,
+      414,
+      415,
+      416,
+      417,
+      418,
+      419,
+      420,
+      421,
+      422,
+      423,
+      427,
+      428,
+      429,
+      430,
+      431,
+      432,
+      433,
+      434,
+      435,
+      436,
+      438,
+      440,
+      441,
+      444,
+      445,
+      447,
+      448,
+      449,
+      450,
+      451,
+      452,
+      454,
+      455,
+      456,
+      459,
+      461,
+      463,
+      465,
+      467,
+      468,
+      469,
+      470,
+      471,
+      472,
+      473,
+      475,
+      476,
+      477,
+      478,
+      479,
+      480,
+      481,
+      482,
+      483,
+      484,
+      485,
+      487,
+      488,
+      490,
+      491,
+      492,
+      493,
+      494,
+      495,
+      496,
+      499,
+      501,
+      502,
+      504,
+      505,
+      506,
+      507,
+      508,
+      511,
+      513,
+      514,
+      518,
+      519,
+      520,
+      522,
+      523,
+      524,
+      525,
+      526,
+      527,
+      528,
+      530,
+      531,
+      532,
+      533,
+      535,
+      536,
+      537,
+      538,
+      540,
+      541,
+      542,
+      543,
+      544,
+      545,
+      546,
+      547,
+      550,
+      551,
+      552,
+      553,
+      554,
+      555,
+      556,
+      560,
+      561,
+      562,
+      563,
+      566,
+      567,
+      568,
+      569,
+      570,
+      571,
+      572,
+      573,
+      575,
+      576,
+      577,
+      579,
+      581,
+      582,
+      583,
+      584,
+      585,
+      586,
+      587,
+      589,
+      590,
+      591,
+      592,
+      593,
+      594,
+      597,
+      598,
+      602,
+      603,
+      604,
+      605,
+      606,
+      607,
+      609,
+      610,
+      611,
+      613,
+      614,
+      615,
+      616,
+      617,
+      620,
+      621,
+      623,
+      624,
+      625,
+      626,
+      628,
+      630,
+      631,
+      633,
+      634,
+      635,
+      636,
+      637,
+      638,
+      639,
+      640,
+      642,
+      643,
+      644,
+      646,
+      647,
+      648,
+      649,
+      651,
+      653,
+      655,
+      656,
+      657,
+      658,
+      659,
+      661,
+      663,
+      664,
+      665,
+      666,
+      667,
+      668,
+      669,
+      670,
+      672,
+      673,
+      675,
+      676,
+      680,
+      682,
+      683,
+      686,
+      687,
+      688,
+      689,
+      690,
+      691,
+      692,
+      693,
+      694,
+      695,
+      696,
+      697,
+      698,
+      700,
+      701,
+      702,
+      703,
+      704,
+      706,
+      707,
+      708,
+      709,
+      711,
+      712,
+      713,
+      714,
+      715,
+      716,
+      717,
+      719,
+      720,
+      721,
+      722,
+      724,
+      725,
+      727,
+      728,
+      731,
+      732,
+      733,
+      734,
+      736,
+      737,
+      738,
+      739,
+      740,
+      741,
+      742,
+      744,
+      745,
+      746,
+      748,
+      750,
+      752,
+      753,
+      754,
+      755,
+      756,
+      757,
+      758,
+      759,
+      760,
+      761,
+      764,
+      767,
+      768,
+      769,
+      772,
+      773,
+      774,
+      775,
+      776,
+      777,
+      778,
+      779,
+      781,
+      782,
+      783,
+      784,
+      785,
+      789,
+      790,
+      791,
+      792,
+      793,
+      795,
+      796,
+      797,
+      799,
+      801,
+      802,
+      807,
+      809,
+      810,
+      811,
+      812,
+      813,
+      814,
+      815,
+      816,
+      817,
+      818,
+      819,
+      821,
+      822,
+      823,
+      824,
+      825,
+      826,
+      827,
+      829,
+      830,
+      831,
+      834,
+      835,
+      837,
+      838,
+      839,
+      840,
+      841,
+      842,
+      843,
+      844,
+      846,
+      847,
+      848,
+      849,
+      850,
+      852,
+      854,
+      856,
+      857,
+      858,
+      859,
+      860,
+      861,
+      862,
+      864,
+      865,
+      866,
+      867,
+      870,
+      871,
+      873,
+      874,
+      875,
+      877,
+      878,
+      879,
+      880,
+      881,
+      882,
+      883,
+      884,
+      885,
+      886,
+      887,
+      888,
+      893,
+      894,
+      895,
+      896,
+      897,
+      899,
+      901,
+      902,
+      903,
+      905,
+      906,
+      907,
+      909,
+      910,
+      911,
+      913,
+      916,
+      917,
+      918,
+      919,
+      920,
+      921,
+      923,
+      924,
+      925,
+      926,
+      927,
+      928,
+      929,
+      930,
+      931,
+      932,
+      933,
+      934,
+      935,
+      936,
+      937,
+      939,
+      942,
+      943,
+      944,
+      945,
+      946,
+      948,
+      949,
+      950,
+      953,
+      954,
+      955,
+      956,
+      959,
+      961,
+      962,
+      963,
+      964,
+      965,
+      966,
+      967,
+      968,
+      969,
+      971,
+      972,
+      973,
+      974,
+      975,
+      980,
+      981,
+      982,
+      983,
+      984,
+      986,
+      987,
+      989,
+      990,
+      991,
+      992,
+      993,
+      994,
+      995,
+      997,
+      999,
+      1000,
+      1001,
+      1002,
+      1003,
+      1005,
+      1006,
+      1007,
+      1008,
+      1010,
+      1011,
+      1012,
+      1013,
+      1014,
+      1015,
+      1016,
+      1017,
+      1018,
+      1019
+    ],
+    "heldout_cases": [
+      0,
+      6,
+      7,
+      12,
+      21,
+      22,
+      23,
+      26,
+      33,
+      36,
+      40,
+      43,
+      49,
+      54,
+      55,
+      62,
+      64,
+      65,
+      81,
+      83,
+      88,
+      92,
+      93,
+      94,
+      98,
+      99,
+      103,
+      104,
+      105,
+      111,
+      119,
+      125,
+      128,
+      131,
+      132,
+      139,
+      141,
+      142,
+      149,
+      152,
+      161,
+      172,
+      175,
+      176,
+      179,
+      181,
+      189,
+      191,
+      197,
+      198,
+      201,
+      202,
+      205,
+      208,
+      212,
+      213,
+      230,
+      231,
+      237,
+      238,
+      241,
+      248,
+      251,
+      254,
+      259,
+      262,
+      264,
+      266,
+      267,
+      268,
+      283,
+      286,
+      288,
+      291,
+      298,
+      299,
+      304,
+      312,
+      313,
+      316,
+      323,
+      324,
+      325,
+      330,
+      332,
+      340,
+      345,
+      348,
+      357,
+      358,
+      363,
+      366,
+      370,
+      371,
+      378,
+      379,
+      384,
+      386,
+      388,
+      392,
+      396,
+      404,
+      408,
+      410,
+      424,
+      425,
+      426,
+      437,
+      439,
+      442,
+      443,
+      446,
+      453,
+      457,
+      458,
+      460,
+      462,
+      464,
+      466,
+      474,
+      486,
+      489,
+      497,
+      498,
+      500,
+      503,
+      509,
+      510,
+      512,
+      515,
+      516,
+      517,
+      521,
+      529,
+      534,
+      539,
+      548,
+      549,
+      557,
+      558,
+      559,
+      564,
+      565,
+      574,
+      578,
+      580,
+      588,
+      595,
+      596,
+      599,
+      600,
+      601,
+      608,
+      612,
+      618,
+      619,
+      622,
+      627,
+      629,
+      632,
+      641,
+      645,
+      650,
+      652,
+      654,
+      660,
+      662,
+      671,
+      674,
+      677,
+      678,
+      679,
+      681,
+      684,
+      685,
+      699,
+      705,
+      710,
+      718,
+      723,
+      726,
+      729,
+      730,
+      735,
+      743,
+      747,
+      749,
+      751,
+      762,
+      763,
+      765,
+      766,
+      770,
+      771,
+      780,
+      786,
+      787,
+      788,
+      794,
+      798,
+      800,
+      803,
+      804,
+      805,
+      806,
+      808,
+      820,
+      828,
+      832,
+      833,
+      836,
+      845,
+      851,
+      853,
+      855,
+      863,
+      868,
+      869,
+      872,
+      876,
+      889,
+      890,
+      891,
+      892,
+      898,
+      900,
+      904,
+      908,
+      912,
+      914,
+      915,
+      922,
+      938,
+      940,
+      941,
+      947,
+      951,
+      952,
+      957,
+      958,
+      960,
+      970,
+      976,
+      977,
+      978,
+      979,
+      985,
+      988,
+      996,
+      998,
+      1004,
+      1009,
+      1020,
+      1021,
+      1022,
+      1023
+    ]
+  },
+  "evaluation_note": "Held-out cases never enter RL training. Future transfer tests must freeze network weights and use fresh N100/S50/F50 statistics; no automatic evaluation.",
+  "random_lookup_seed": 20261022,
+  "random_lookup_tables": [
+    [
+      8,
+      9,
+      27,
+      0,
+      44,
+      10,
+      51,
+      16,
+      52,
+      9,
+      19,
+      17,
+      0,
+      47,
+      42,
+      29,
+      5,
+      10,
+      28,
+      22,
+      38,
+      50,
+      46,
+      4,
+      20,
+      17,
+      62,
+      47,
+      42,
+      63,
+      44,
+      40
+    ],
+    [
+      59,
+      24,
+      18,
+      59,
+      8,
+      5,
+      48,
+      8,
+      62,
+      0,
+      28,
+      55,
+      8,
+      49,
+      47,
+      38,
+      51,
+      19,
+      24,
+      43,
+      15,
+      12,
+      24,
+      28,
+      21,
+      45,
+      32,
+      42,
+      24,
+      1,
+      50,
+      5
+    ]
+  ],
+  "operators": [
+    {
+      "operator_id": 0,
+      "code": "00000",
+      "name": "ADD",
+      "rule": "A+B, exact; A=abc (0..7), B=de (0..3)"
+    },
+    {
+      "operator_id": 1,
+      "code": "00001",
+      "name": "SUB_MOD64",
+      "rule": "(A-B) modulo64"
+    },
+    {
+      "operator_id": 2,
+      "code": "00010",
+      "name": "AND",
+      "rule": "A bitwise AND B"
+    },
+    {
+      "operator_id": 3,
+      "code": "00011",
+      "name": "XOR",
+      "rule": "A bitwise XOR B"
+    },
+    {
+      "operator_id": 4,
+      "code": "00100",
+      "name": "POPCOUNT5",
+      "rule": "Number of ones in abcde"
+    },
+    {
+      "operator_id": 5,
+      "code": "00101",
+      "name": "REVERSE5",
+      "rule": "Reverse abcde to edcba, zero extended to6 bits"
+    },
+    {
+      "operator_id": 6,
+      "code": "00110",
+      "name": "COMPARE",
+      "rule": "Output integer 4*(A<B)+2*(A=B)+(A>B)"
+    },
+    {
+      "operator_id": 7,
+      "code": "00111",
+      "name": "SORT5",
+      "rule": "Sort abcde ascending, zero extended to6 bits"
+    },
+    {
+      "operator_id": 8,
+      "code": "01000",
+      "name": "MUL",
+      "rule": "A*B, exact"
+    },
+    {
+      "operator_id": 9,
+      "code": "01001",
+      "name": "OR",
+      "rule": "A bitwise OR B"
+    },
+    {
+      "operator_id": 10,
+      "code": "01010",
+      "name": "ROTATE_LEFT5",
+      "rule": "abcde to bcdea"
+    },
+    {
+      "operator_id": 11,
+      "code": "01011",
+      "name": "CONDITIONAL_REVERSE5",
+      "rule": "If a=0 copy abcde; if a=1 reverse abcde"
+    },
+    {
+      "operator_id": 12,
+      "code": "01100",
+      "name": "ONE_RUNS5",
+      "rule": "Number of maximal runs of ones in abcde"
+    },
+    {
+      "operator_id": 13,
+      "code": "01101",
+      "name": "TRANSITIONS5",
+      "rule": "Number of adjacent unequal pairs in abcde"
+    },
+    {
+      "operator_id": 14,
+      "code": "01110",
+      "name": "LOCAL_PARITIES5",
+      "rule": "[a XOR b,b XOR c,c XOR d,d XOR e,e XOR a]"
+    },
+    {
+      "operator_id": 15,
+      "code": "01111",
+      "name": "GRAY5",
+      "rule": "Binary abcde to Gray code"
+    },
+    {
+      "operator_id": 16,
+      "code": "10000",
+      "name": "NOT5",
+      "rule": "Bitwise complement of abcde within5 bits"
+    },
+    {
+      "operator_id": 17,
+      "code": "10001",
+      "name": "SHIFT_LEFT1",
+      "rule": "x*2, exact6-bit output"
+    },
+    {
+      "operator_id": 18,
+      "code": "10010",
+      "name": "SHIFT_RIGHT1",
+      "rule": "x shifted right by1"
+    },
+    {
+      "operator_id": 19,
+      "code": "10011",
+      "name": "ROTATE_RIGHT5",
+      "rule": "abcde to eabcd"
+    },
+    {
+      "operator_id": 20,
+      "code": "10100",
+      "name": "SWAP_ADJACENT5",
+      "rule": "abcde to badce"
+    },
+    {
+      "operator_id": 21,
+      "code": "10101",
+      "name": "PREFIX_PARITIES5",
+      "rule": "[a,a XOR b,a XOR b XOR c,...,a XOR b XOR c XOR d XOR e]"
+    },
+    {
+      "operator_id": 22,
+      "code": "10110",
+      "name": "SUFFIX_PARITIES5",
+      "rule": "[a XOR b XOR c XOR d XOR e,...,d XOR e,e]"
+    },
+    {
+      "operator_id": 23,
+      "code": "10111",
+      "name": "ONEHOT_MOD6",
+      "rule": "1 shifted left by x modulo6"
+    },
+    {
+      "operator_id": 24,
+      "code": "11000",
+      "name": "SQUARE_MOD64",
+      "rule": "x*x modulo64"
+    },
+    {
+      "operator_id": 25,
+      "code": "11001",
+      "name": "AFFINE_MOD64",
+      "rule": "(13*x+7) modulo64"
+    },
+    {
+      "operator_id": 26,
+      "code": "11010",
+      "name": "CRC6",
+      "rule": "Start register0; feed abcde MSB first; feedback=register bit5 XOR input; shift left masked63; XOR3 if feedback1"
+    },
+    {
+      "operator_id": 27,
+      "code": "11011",
+      "name": "HAMMING_DISTANCE_10101",
+      "rule": "Number of differing bits between abcde and10101"
+    },
+    {
+      "operator_id": 28,
+      "code": "11100",
+      "name": "LONGEST_ONE_RUN5",
+      "rule": "Length of longest contiguous run of ones"
+    },
+    {
+      "operator_id": 29,
+      "code": "11101",
+      "name": "RANDOM_LOOKUP_A",
+      "rule": "Fixed random6-bit lookup table generated with LOOKUP_SEED"
+    },
+    {
+      "operator_id": 30,
+      "code": "11110",
+      "name": "RANDOM_LOOKUP_B",
+      "rule": "Second fixed random6-bit lookup table generated with LOOKUP_SEED"
+    },
+    {
+      "operator_id": 31,
+      "code": "11111",
+      "name": "BIT_PERMUTE5",
+      "rule": "abcde to ceadb"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": 0,
+      "operator_id": 0,
+      "data": 0,
+      "protected_bits": "0000000000",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 1,
+      "operator_id": 0,
+      "data": 1,
+      "protected_bits": "0000000001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 2,
+      "operator_id": 0,
+      "data": 2,
+      "protected_bits": "0000000010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 3,
+      "operator_id": 0,
+      "data": 3,
+      "protected_bits": "0000000011",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 4,
+      "operator_id": 0,
+      "data": 4,
+      "protected_bits": "0000000100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 5,
+      "operator_id": 0,
+      "data": 5,
+      "protected_bits": "0000000101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 6,
+      "operator_id": 0,
+      "data": 6,
+      "protected_bits": "0000000110",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 7,
+      "operator_id": 0,
+      "data": 7,
+      "protected_bits": "0000000111",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 8,
+      "operator_id": 0,
+      "data": 8,
+      "protected_bits": "0000001000",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 9,
+      "operator_id": 0,
+      "data": 9,
+      "protected_bits": "0000001001",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 10,
+      "operator_id": 0,
+      "data": 10,
+      "protected_bits": "0000001010",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 11,
+      "operator_id": 0,
+      "data": 11,
+      "protected_bits": "0000001011",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 12,
+      "operator_id": 0,
+      "data": 12,
+      "protected_bits": "0000001100",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 13,
+      "operator_id": 0,
+      "data": 13,
+      "protected_bits": "0000001101",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 14,
+      "operator_id": 0,
+      "data": 14,
+      "protected_bits": "0000001110",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 15,
+      "operator_id": 0,
+      "data": 15,
+      "protected_bits": "0000001111",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 16,
+      "operator_id": 0,
+      "data": 16,
+      "protected_bits": "0000010000",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 17,
+      "operator_id": 0,
+      "data": 17,
+      "protected_bits": "0000010001",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 18,
+      "operator_id": 0,
+      "data": 18,
+      "protected_bits": "0000010010",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 19,
+      "operator_id": 0,
+      "data": 19,
+      "protected_bits": "0000010011",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 20,
+      "operator_id": 0,
+      "data": 20,
+      "protected_bits": "0000010100",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 21,
+      "operator_id": 0,
+      "data": 21,
+      "protected_bits": "0000010101",
+      "answer": "000110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 22,
+      "operator_id": 0,
+      "data": 22,
+      "protected_bits": "0000010110",
+      "answer": "000111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 23,
+      "operator_id": 0,
+      "data": 23,
+      "protected_bits": "0000010111",
+      "answer": "001000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 24,
+      "operator_id": 0,
+      "data": 24,
+      "protected_bits": "0000011000",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 25,
+      "operator_id": 0,
+      "data": 25,
+      "protected_bits": "0000011001",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 26,
+      "operator_id": 0,
+      "data": 26,
+      "protected_bits": "0000011010",
+      "answer": "001000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 27,
+      "operator_id": 0,
+      "data": 27,
+      "protected_bits": "0000011011",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 28,
+      "operator_id": 0,
+      "data": 28,
+      "protected_bits": "0000011100",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 29,
+      "operator_id": 0,
+      "data": 29,
+      "protected_bits": "0000011101",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 30,
+      "operator_id": 0,
+      "data": 30,
+      "protected_bits": "0000011110",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 31,
+      "operator_id": 0,
+      "data": 31,
+      "protected_bits": "0000011111",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 32,
+      "operator_id": 1,
+      "data": 0,
+      "protected_bits": "0000100000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 33,
+      "operator_id": 1,
+      "data": 1,
+      "protected_bits": "0000100001",
+      "answer": "111111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 34,
+      "operator_id": 1,
+      "data": 2,
+      "protected_bits": "0000100010",
+      "answer": "111110",
+      "split": "train"
+    },
+    {
+      "case_id": 35,
+      "operator_id": 1,
+      "data": 3,
+      "protected_bits": "0000100011",
+      "answer": "111101",
+      "split": "train"
+    },
+    {
+      "case_id": 36,
+      "operator_id": 1,
+      "data": 4,
+      "protected_bits": "0000100100",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 37,
+      "operator_id": 1,
+      "data": 5,
+      "protected_bits": "0000100101",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 38,
+      "operator_id": 1,
+      "data": 6,
+      "protected_bits": "0000100110",
+      "answer": "111111",
+      "split": "train"
+    },
+    {
+      "case_id": 39,
+      "operator_id": 1,
+      "data": 7,
+      "protected_bits": "0000100111",
+      "answer": "111110",
+      "split": "train"
+    },
+    {
+      "case_id": 40,
+      "operator_id": 1,
+      "data": 8,
+      "protected_bits": "0000101000",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 41,
+      "operator_id": 1,
+      "data": 9,
+      "protected_bits": "0000101001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 42,
+      "operator_id": 1,
+      "data": 10,
+      "protected_bits": "0000101010",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 43,
+      "operator_id": 1,
+      "data": 11,
+      "protected_bits": "0000101011",
+      "answer": "111111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 44,
+      "operator_id": 1,
+      "data": 12,
+      "protected_bits": "0000101100",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 45,
+      "operator_id": 1,
+      "data": 13,
+      "protected_bits": "0000101101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 46,
+      "operator_id": 1,
+      "data": 14,
+      "protected_bits": "0000101110",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 47,
+      "operator_id": 1,
+      "data": 15,
+      "protected_bits": "0000101111",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 48,
+      "operator_id": 1,
+      "data": 16,
+      "protected_bits": "0000110000",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 49,
+      "operator_id": 1,
+      "data": 17,
+      "protected_bits": "0000110001",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 50,
+      "operator_id": 1,
+      "data": 18,
+      "protected_bits": "0000110010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 51,
+      "operator_id": 1,
+      "data": 19,
+      "protected_bits": "0000110011",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 52,
+      "operator_id": 1,
+      "data": 20,
+      "protected_bits": "0000110100",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 53,
+      "operator_id": 1,
+      "data": 21,
+      "protected_bits": "0000110101",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 54,
+      "operator_id": 1,
+      "data": 22,
+      "protected_bits": "0000110110",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 55,
+      "operator_id": 1,
+      "data": 23,
+      "protected_bits": "0000110111",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 56,
+      "operator_id": 1,
+      "data": 24,
+      "protected_bits": "0000111000",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 57,
+      "operator_id": 1,
+      "data": 25,
+      "protected_bits": "0000111001",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 58,
+      "operator_id": 1,
+      "data": 26,
+      "protected_bits": "0000111010",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 59,
+      "operator_id": 1,
+      "data": 27,
+      "protected_bits": "0000111011",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 60,
+      "operator_id": 1,
+      "data": 28,
+      "protected_bits": "0000111100",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 61,
+      "operator_id": 1,
+      "data": 29,
+      "protected_bits": "0000111101",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 62,
+      "operator_id": 1,
+      "data": 30,
+      "protected_bits": "0000111110",
+      "answer": "000101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 63,
+      "operator_id": 1,
+      "data": 31,
+      "protected_bits": "0000111111",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 64,
+      "operator_id": 2,
+      "data": 0,
+      "protected_bits": "0001000000",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 65,
+      "operator_id": 2,
+      "data": 1,
+      "protected_bits": "0001000001",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 66,
+      "operator_id": 2,
+      "data": 2,
+      "protected_bits": "0001000010",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 67,
+      "operator_id": 2,
+      "data": 3,
+      "protected_bits": "0001000011",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 68,
+      "operator_id": 2,
+      "data": 4,
+      "protected_bits": "0001000100",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 69,
+      "operator_id": 2,
+      "data": 5,
+      "protected_bits": "0001000101",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 70,
+      "operator_id": 2,
+      "data": 6,
+      "protected_bits": "0001000110",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 71,
+      "operator_id": 2,
+      "data": 7,
+      "protected_bits": "0001000111",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 72,
+      "operator_id": 2,
+      "data": 8,
+      "protected_bits": "0001001000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 73,
+      "operator_id": 2,
+      "data": 9,
+      "protected_bits": "0001001001",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 74,
+      "operator_id": 2,
+      "data": 10,
+      "protected_bits": "0001001010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 75,
+      "operator_id": 2,
+      "data": 11,
+      "protected_bits": "0001001011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 76,
+      "operator_id": 2,
+      "data": 12,
+      "protected_bits": "0001001100",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 77,
+      "operator_id": 2,
+      "data": 13,
+      "protected_bits": "0001001101",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 78,
+      "operator_id": 2,
+      "data": 14,
+      "protected_bits": "0001001110",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 79,
+      "operator_id": 2,
+      "data": 15,
+      "protected_bits": "0001001111",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 80,
+      "operator_id": 2,
+      "data": 16,
+      "protected_bits": "0001010000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 81,
+      "operator_id": 2,
+      "data": 17,
+      "protected_bits": "0001010001",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 82,
+      "operator_id": 2,
+      "data": 18,
+      "protected_bits": "0001010010",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 83,
+      "operator_id": 2,
+      "data": 19,
+      "protected_bits": "0001010011",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 84,
+      "operator_id": 2,
+      "data": 20,
+      "protected_bits": "0001010100",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 85,
+      "operator_id": 2,
+      "data": 21,
+      "protected_bits": "0001010101",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 86,
+      "operator_id": 2,
+      "data": 22,
+      "protected_bits": "0001010110",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 87,
+      "operator_id": 2,
+      "data": 23,
+      "protected_bits": "0001010111",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 88,
+      "operator_id": 2,
+      "data": 24,
+      "protected_bits": "0001011000",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 89,
+      "operator_id": 2,
+      "data": 25,
+      "protected_bits": "0001011001",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 90,
+      "operator_id": 2,
+      "data": 26,
+      "protected_bits": "0001011010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 91,
+      "operator_id": 2,
+      "data": 27,
+      "protected_bits": "0001011011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 92,
+      "operator_id": 2,
+      "data": 28,
+      "protected_bits": "0001011100",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 93,
+      "operator_id": 2,
+      "data": 29,
+      "protected_bits": "0001011101",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 94,
+      "operator_id": 2,
+      "data": 30,
+      "protected_bits": "0001011110",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 95,
+      "operator_id": 2,
+      "data": 31,
+      "protected_bits": "0001011111",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 96,
+      "operator_id": 3,
+      "data": 0,
+      "protected_bits": "0001100000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 97,
+      "operator_id": 3,
+      "data": 1,
+      "protected_bits": "0001100001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 98,
+      "operator_id": 3,
+      "data": 2,
+      "protected_bits": "0001100010",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 99,
+      "operator_id": 3,
+      "data": 3,
+      "protected_bits": "0001100011",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 100,
+      "operator_id": 3,
+      "data": 4,
+      "protected_bits": "0001100100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 101,
+      "operator_id": 3,
+      "data": 5,
+      "protected_bits": "0001100101",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 102,
+      "operator_id": 3,
+      "data": 6,
+      "protected_bits": "0001100110",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 103,
+      "operator_id": 3,
+      "data": 7,
+      "protected_bits": "0001100111",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 104,
+      "operator_id": 3,
+      "data": 8,
+      "protected_bits": "0001101000",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 105,
+      "operator_id": 3,
+      "data": 9,
+      "protected_bits": "0001101001",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 106,
+      "operator_id": 3,
+      "data": 10,
+      "protected_bits": "0001101010",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 107,
+      "operator_id": 3,
+      "data": 11,
+      "protected_bits": "0001101011",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 108,
+      "operator_id": 3,
+      "data": 12,
+      "protected_bits": "0001101100",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 109,
+      "operator_id": 3,
+      "data": 13,
+      "protected_bits": "0001101101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 110,
+      "operator_id": 3,
+      "data": 14,
+      "protected_bits": "0001101110",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 111,
+      "operator_id": 3,
+      "data": 15,
+      "protected_bits": "0001101111",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 112,
+      "operator_id": 3,
+      "data": 16,
+      "protected_bits": "0001110000",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 113,
+      "operator_id": 3,
+      "data": 17,
+      "protected_bits": "0001110001",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 114,
+      "operator_id": 3,
+      "data": 18,
+      "protected_bits": "0001110010",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 115,
+      "operator_id": 3,
+      "data": 19,
+      "protected_bits": "0001110011",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 116,
+      "operator_id": 3,
+      "data": 20,
+      "protected_bits": "0001110100",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 117,
+      "operator_id": 3,
+      "data": 21,
+      "protected_bits": "0001110101",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 118,
+      "operator_id": 3,
+      "data": 22,
+      "protected_bits": "0001110110",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 119,
+      "operator_id": 3,
+      "data": 23,
+      "protected_bits": "0001110111",
+      "answer": "000110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 120,
+      "operator_id": 3,
+      "data": 24,
+      "protected_bits": "0001111000",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 121,
+      "operator_id": 3,
+      "data": 25,
+      "protected_bits": "0001111001",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 122,
+      "operator_id": 3,
+      "data": 26,
+      "protected_bits": "0001111010",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 123,
+      "operator_id": 3,
+      "data": 27,
+      "protected_bits": "0001111011",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 124,
+      "operator_id": 3,
+      "data": 28,
+      "protected_bits": "0001111100",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 125,
+      "operator_id": 3,
+      "data": 29,
+      "protected_bits": "0001111101",
+      "answer": "000110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 126,
+      "operator_id": 3,
+      "data": 30,
+      "protected_bits": "0001111110",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 127,
+      "operator_id": 3,
+      "data": 31,
+      "protected_bits": "0001111111",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 128,
+      "operator_id": 4,
+      "data": 0,
+      "protected_bits": "0010000000",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 129,
+      "operator_id": 4,
+      "data": 1,
+      "protected_bits": "0010000001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 130,
+      "operator_id": 4,
+      "data": 2,
+      "protected_bits": "0010000010",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 131,
+      "operator_id": 4,
+      "data": 3,
+      "protected_bits": "0010000011",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 132,
+      "operator_id": 4,
+      "data": 4,
+      "protected_bits": "0010000100",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 133,
+      "operator_id": 4,
+      "data": 5,
+      "protected_bits": "0010000101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 134,
+      "operator_id": 4,
+      "data": 6,
+      "protected_bits": "0010000110",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 135,
+      "operator_id": 4,
+      "data": 7,
+      "protected_bits": "0010000111",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 136,
+      "operator_id": 4,
+      "data": 8,
+      "protected_bits": "0010001000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 137,
+      "operator_id": 4,
+      "data": 9,
+      "protected_bits": "0010001001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 138,
+      "operator_id": 4,
+      "data": 10,
+      "protected_bits": "0010001010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 139,
+      "operator_id": 4,
+      "data": 11,
+      "protected_bits": "0010001011",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 140,
+      "operator_id": 4,
+      "data": 12,
+      "protected_bits": "0010001100",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 141,
+      "operator_id": 4,
+      "data": 13,
+      "protected_bits": "0010001101",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 142,
+      "operator_id": 4,
+      "data": 14,
+      "protected_bits": "0010001110",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 143,
+      "operator_id": 4,
+      "data": 15,
+      "protected_bits": "0010001111",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 144,
+      "operator_id": 4,
+      "data": 16,
+      "protected_bits": "0010010000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 145,
+      "operator_id": 4,
+      "data": 17,
+      "protected_bits": "0010010001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 146,
+      "operator_id": 4,
+      "data": 18,
+      "protected_bits": "0010010010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 147,
+      "operator_id": 4,
+      "data": 19,
+      "protected_bits": "0010010011",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 148,
+      "operator_id": 4,
+      "data": 20,
+      "protected_bits": "0010010100",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 149,
+      "operator_id": 4,
+      "data": 21,
+      "protected_bits": "0010010101",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 150,
+      "operator_id": 4,
+      "data": 22,
+      "protected_bits": "0010010110",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 151,
+      "operator_id": 4,
+      "data": 23,
+      "protected_bits": "0010010111",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 152,
+      "operator_id": 4,
+      "data": 24,
+      "protected_bits": "0010011000",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 153,
+      "operator_id": 4,
+      "data": 25,
+      "protected_bits": "0010011001",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 154,
+      "operator_id": 4,
+      "data": 26,
+      "protected_bits": "0010011010",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 155,
+      "operator_id": 4,
+      "data": 27,
+      "protected_bits": "0010011011",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 156,
+      "operator_id": 4,
+      "data": 28,
+      "protected_bits": "0010011100",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 157,
+      "operator_id": 4,
+      "data": 29,
+      "protected_bits": "0010011101",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 158,
+      "operator_id": 4,
+      "data": 30,
+      "protected_bits": "0010011110",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 159,
+      "operator_id": 4,
+      "data": 31,
+      "protected_bits": "0010011111",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 160,
+      "operator_id": 5,
+      "data": 0,
+      "protected_bits": "0010100000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 161,
+      "operator_id": 5,
+      "data": 1,
+      "protected_bits": "0010100001",
+      "answer": "010000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 162,
+      "operator_id": 5,
+      "data": 2,
+      "protected_bits": "0010100010",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 163,
+      "operator_id": 5,
+      "data": 3,
+      "protected_bits": "0010100011",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 164,
+      "operator_id": 5,
+      "data": 4,
+      "protected_bits": "0010100100",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 165,
+      "operator_id": 5,
+      "data": 5,
+      "protected_bits": "0010100101",
+      "answer": "010100",
+      "split": "train"
+    },
+    {
+      "case_id": 166,
+      "operator_id": 5,
+      "data": 6,
+      "protected_bits": "0010100110",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 167,
+      "operator_id": 5,
+      "data": 7,
+      "protected_bits": "0010100111",
+      "answer": "011100",
+      "split": "train"
+    },
+    {
+      "case_id": 168,
+      "operator_id": 5,
+      "data": 8,
+      "protected_bits": "0010101000",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 169,
+      "operator_id": 5,
+      "data": 9,
+      "protected_bits": "0010101001",
+      "answer": "010010",
+      "split": "train"
+    },
+    {
+      "case_id": 170,
+      "operator_id": 5,
+      "data": 10,
+      "protected_bits": "0010101010",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 171,
+      "operator_id": 5,
+      "data": 11,
+      "protected_bits": "0010101011",
+      "answer": "011010",
+      "split": "train"
+    },
+    {
+      "case_id": 172,
+      "operator_id": 5,
+      "data": 12,
+      "protected_bits": "0010101100",
+      "answer": "000110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 173,
+      "operator_id": 5,
+      "data": 13,
+      "protected_bits": "0010101101",
+      "answer": "010110",
+      "split": "train"
+    },
+    {
+      "case_id": 174,
+      "operator_id": 5,
+      "data": 14,
+      "protected_bits": "0010101110",
+      "answer": "001110",
+      "split": "train"
+    },
+    {
+      "case_id": 175,
+      "operator_id": 5,
+      "data": 15,
+      "protected_bits": "0010101111",
+      "answer": "011110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 176,
+      "operator_id": 5,
+      "data": 16,
+      "protected_bits": "0010110000",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 177,
+      "operator_id": 5,
+      "data": 17,
+      "protected_bits": "0010110001",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 178,
+      "operator_id": 5,
+      "data": 18,
+      "protected_bits": "0010110010",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 179,
+      "operator_id": 5,
+      "data": 19,
+      "protected_bits": "0010110011",
+      "answer": "011001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 180,
+      "operator_id": 5,
+      "data": 20,
+      "protected_bits": "0010110100",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 181,
+      "operator_id": 5,
+      "data": 21,
+      "protected_bits": "0010110101",
+      "answer": "010101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 182,
+      "operator_id": 5,
+      "data": 22,
+      "protected_bits": "0010110110",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 183,
+      "operator_id": 5,
+      "data": 23,
+      "protected_bits": "0010110111",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 184,
+      "operator_id": 5,
+      "data": 24,
+      "protected_bits": "0010111000",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 185,
+      "operator_id": 5,
+      "data": 25,
+      "protected_bits": "0010111001",
+      "answer": "010011",
+      "split": "train"
+    },
+    {
+      "case_id": 186,
+      "operator_id": 5,
+      "data": 26,
+      "protected_bits": "0010111010",
+      "answer": "001011",
+      "split": "train"
+    },
+    {
+      "case_id": 187,
+      "operator_id": 5,
+      "data": 27,
+      "protected_bits": "0010111011",
+      "answer": "011011",
+      "split": "train"
+    },
+    {
+      "case_id": 188,
+      "operator_id": 5,
+      "data": 28,
+      "protected_bits": "0010111100",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 189,
+      "operator_id": 5,
+      "data": 29,
+      "protected_bits": "0010111101",
+      "answer": "010111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 190,
+      "operator_id": 5,
+      "data": 30,
+      "protected_bits": "0010111110",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 191,
+      "operator_id": 5,
+      "data": 31,
+      "protected_bits": "0010111111",
+      "answer": "011111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 192,
+      "operator_id": 6,
+      "data": 0,
+      "protected_bits": "0011000000",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 193,
+      "operator_id": 6,
+      "data": 1,
+      "protected_bits": "0011000001",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 194,
+      "operator_id": 6,
+      "data": 2,
+      "protected_bits": "0011000010",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 195,
+      "operator_id": 6,
+      "data": 3,
+      "protected_bits": "0011000011",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 196,
+      "operator_id": 6,
+      "data": 4,
+      "protected_bits": "0011000100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 197,
+      "operator_id": 6,
+      "data": 5,
+      "protected_bits": "0011000101",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 198,
+      "operator_id": 6,
+      "data": 6,
+      "protected_bits": "0011000110",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 199,
+      "operator_id": 6,
+      "data": 7,
+      "protected_bits": "0011000111",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 200,
+      "operator_id": 6,
+      "data": 8,
+      "protected_bits": "0011001000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 201,
+      "operator_id": 6,
+      "data": 9,
+      "protected_bits": "0011001001",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 202,
+      "operator_id": 6,
+      "data": 10,
+      "protected_bits": "0011001010",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 203,
+      "operator_id": 6,
+      "data": 11,
+      "protected_bits": "0011001011",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 204,
+      "operator_id": 6,
+      "data": 12,
+      "protected_bits": "0011001100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 205,
+      "operator_id": 6,
+      "data": 13,
+      "protected_bits": "0011001101",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 206,
+      "operator_id": 6,
+      "data": 14,
+      "protected_bits": "0011001110",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 207,
+      "operator_id": 6,
+      "data": 15,
+      "protected_bits": "0011001111",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 208,
+      "operator_id": 6,
+      "data": 16,
+      "protected_bits": "0011010000",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 209,
+      "operator_id": 6,
+      "data": 17,
+      "protected_bits": "0011010001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 210,
+      "operator_id": 6,
+      "data": 18,
+      "protected_bits": "0011010010",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 211,
+      "operator_id": 6,
+      "data": 19,
+      "protected_bits": "0011010011",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 212,
+      "operator_id": 6,
+      "data": 20,
+      "protected_bits": "0011010100",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 213,
+      "operator_id": 6,
+      "data": 21,
+      "protected_bits": "0011010101",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 214,
+      "operator_id": 6,
+      "data": 22,
+      "protected_bits": "0011010110",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 215,
+      "operator_id": 6,
+      "data": 23,
+      "protected_bits": "0011010111",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 216,
+      "operator_id": 6,
+      "data": 24,
+      "protected_bits": "0011011000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 217,
+      "operator_id": 6,
+      "data": 25,
+      "protected_bits": "0011011001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 218,
+      "operator_id": 6,
+      "data": 26,
+      "protected_bits": "0011011010",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 219,
+      "operator_id": 6,
+      "data": 27,
+      "protected_bits": "0011011011",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 220,
+      "operator_id": 6,
+      "data": 28,
+      "protected_bits": "0011011100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 221,
+      "operator_id": 6,
+      "data": 29,
+      "protected_bits": "0011011101",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 222,
+      "operator_id": 6,
+      "data": 30,
+      "protected_bits": "0011011110",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 223,
+      "operator_id": 6,
+      "data": 31,
+      "protected_bits": "0011011111",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 224,
+      "operator_id": 7,
+      "data": 0,
+      "protected_bits": "0011100000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 225,
+      "operator_id": 7,
+      "data": 1,
+      "protected_bits": "0011100001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 226,
+      "operator_id": 7,
+      "data": 2,
+      "protected_bits": "0011100010",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 227,
+      "operator_id": 7,
+      "data": 3,
+      "protected_bits": "0011100011",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 228,
+      "operator_id": 7,
+      "data": 4,
+      "protected_bits": "0011100100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 229,
+      "operator_id": 7,
+      "data": 5,
+      "protected_bits": "0011100101",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 230,
+      "operator_id": 7,
+      "data": 6,
+      "protected_bits": "0011100110",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 231,
+      "operator_id": 7,
+      "data": 7,
+      "protected_bits": "0011100111",
+      "answer": "000111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 232,
+      "operator_id": 7,
+      "data": 8,
+      "protected_bits": "0011101000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 233,
+      "operator_id": 7,
+      "data": 9,
+      "protected_bits": "0011101001",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 234,
+      "operator_id": 7,
+      "data": 10,
+      "protected_bits": "0011101010",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 235,
+      "operator_id": 7,
+      "data": 11,
+      "protected_bits": "0011101011",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 236,
+      "operator_id": 7,
+      "data": 12,
+      "protected_bits": "0011101100",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 237,
+      "operator_id": 7,
+      "data": 13,
+      "protected_bits": "0011101101",
+      "answer": "000111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 238,
+      "operator_id": 7,
+      "data": 14,
+      "protected_bits": "0011101110",
+      "answer": "000111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 239,
+      "operator_id": 7,
+      "data": 15,
+      "protected_bits": "0011101111",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 240,
+      "operator_id": 7,
+      "data": 16,
+      "protected_bits": "0011110000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 241,
+      "operator_id": 7,
+      "data": 17,
+      "protected_bits": "0011110001",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 242,
+      "operator_id": 7,
+      "data": 18,
+      "protected_bits": "0011110010",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 243,
+      "operator_id": 7,
+      "data": 19,
+      "protected_bits": "0011110011",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 244,
+      "operator_id": 7,
+      "data": 20,
+      "protected_bits": "0011110100",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 245,
+      "operator_id": 7,
+      "data": 21,
+      "protected_bits": "0011110101",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 246,
+      "operator_id": 7,
+      "data": 22,
+      "protected_bits": "0011110110",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 247,
+      "operator_id": 7,
+      "data": 23,
+      "protected_bits": "0011110111",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 248,
+      "operator_id": 7,
+      "data": 24,
+      "protected_bits": "0011111000",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 249,
+      "operator_id": 7,
+      "data": 25,
+      "protected_bits": "0011111001",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 250,
+      "operator_id": 7,
+      "data": 26,
+      "protected_bits": "0011111010",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 251,
+      "operator_id": 7,
+      "data": 27,
+      "protected_bits": "0011111011",
+      "answer": "001111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 252,
+      "operator_id": 7,
+      "data": 28,
+      "protected_bits": "0011111100",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 253,
+      "operator_id": 7,
+      "data": 29,
+      "protected_bits": "0011111101",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 254,
+      "operator_id": 7,
+      "data": 30,
+      "protected_bits": "0011111110",
+      "answer": "001111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 255,
+      "operator_id": 7,
+      "data": 31,
+      "protected_bits": "0011111111",
+      "answer": "011111",
+      "split": "train"
+    },
+    {
+      "case_id": 256,
+      "operator_id": 8,
+      "data": 0,
+      "protected_bits": "0100000000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 257,
+      "operator_id": 8,
+      "data": 1,
+      "protected_bits": "0100000001",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 258,
+      "operator_id": 8,
+      "data": 2,
+      "protected_bits": "0100000010",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 259,
+      "operator_id": 8,
+      "data": 3,
+      "protected_bits": "0100000011",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 260,
+      "operator_id": 8,
+      "data": 4,
+      "protected_bits": "0100000100",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 261,
+      "operator_id": 8,
+      "data": 5,
+      "protected_bits": "0100000101",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 262,
+      "operator_id": 8,
+      "data": 6,
+      "protected_bits": "0100000110",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 263,
+      "operator_id": 8,
+      "data": 7,
+      "protected_bits": "0100000111",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 264,
+      "operator_id": 8,
+      "data": 8,
+      "protected_bits": "0100001000",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 265,
+      "operator_id": 8,
+      "data": 9,
+      "protected_bits": "0100001001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 266,
+      "operator_id": 8,
+      "data": 10,
+      "protected_bits": "0100001010",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 267,
+      "operator_id": 8,
+      "data": 11,
+      "protected_bits": "0100001011",
+      "answer": "000110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 268,
+      "operator_id": 8,
+      "data": 12,
+      "protected_bits": "0100001100",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 269,
+      "operator_id": 8,
+      "data": 13,
+      "protected_bits": "0100001101",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 270,
+      "operator_id": 8,
+      "data": 14,
+      "protected_bits": "0100001110",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 271,
+      "operator_id": 8,
+      "data": 15,
+      "protected_bits": "0100001111",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 272,
+      "operator_id": 8,
+      "data": 16,
+      "protected_bits": "0100010000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 273,
+      "operator_id": 8,
+      "data": 17,
+      "protected_bits": "0100010001",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 274,
+      "operator_id": 8,
+      "data": 18,
+      "protected_bits": "0100010010",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 275,
+      "operator_id": 8,
+      "data": 19,
+      "protected_bits": "0100010011",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 276,
+      "operator_id": 8,
+      "data": 20,
+      "protected_bits": "0100010100",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 277,
+      "operator_id": 8,
+      "data": 21,
+      "protected_bits": "0100010101",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 278,
+      "operator_id": 8,
+      "data": 22,
+      "protected_bits": "0100010110",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 279,
+      "operator_id": 8,
+      "data": 23,
+      "protected_bits": "0100010111",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 280,
+      "operator_id": 8,
+      "data": 24,
+      "protected_bits": "0100011000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 281,
+      "operator_id": 8,
+      "data": 25,
+      "protected_bits": "0100011001",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 282,
+      "operator_id": 8,
+      "data": 26,
+      "protected_bits": "0100011010",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 283,
+      "operator_id": 8,
+      "data": 27,
+      "protected_bits": "0100011011",
+      "answer": "010010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 284,
+      "operator_id": 8,
+      "data": 28,
+      "protected_bits": "0100011100",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 285,
+      "operator_id": 8,
+      "data": 29,
+      "protected_bits": "0100011101",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 286,
+      "operator_id": 8,
+      "data": 30,
+      "protected_bits": "0100011110",
+      "answer": "001110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 287,
+      "operator_id": 8,
+      "data": 31,
+      "protected_bits": "0100011111",
+      "answer": "010101",
+      "split": "train"
+    },
+    {
+      "case_id": 288,
+      "operator_id": 9,
+      "data": 0,
+      "protected_bits": "0100100000",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 289,
+      "operator_id": 9,
+      "data": 1,
+      "protected_bits": "0100100001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 290,
+      "operator_id": 9,
+      "data": 2,
+      "protected_bits": "0100100010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 291,
+      "operator_id": 9,
+      "data": 3,
+      "protected_bits": "0100100011",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 292,
+      "operator_id": 9,
+      "data": 4,
+      "protected_bits": "0100100100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 293,
+      "operator_id": 9,
+      "data": 5,
+      "protected_bits": "0100100101",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 294,
+      "operator_id": 9,
+      "data": 6,
+      "protected_bits": "0100100110",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 295,
+      "operator_id": 9,
+      "data": 7,
+      "protected_bits": "0100100111",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 296,
+      "operator_id": 9,
+      "data": 8,
+      "protected_bits": "0100101000",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 297,
+      "operator_id": 9,
+      "data": 9,
+      "protected_bits": "0100101001",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 298,
+      "operator_id": 9,
+      "data": 10,
+      "protected_bits": "0100101010",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 299,
+      "operator_id": 9,
+      "data": 11,
+      "protected_bits": "0100101011",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 300,
+      "operator_id": 9,
+      "data": 12,
+      "protected_bits": "0100101100",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 301,
+      "operator_id": 9,
+      "data": 13,
+      "protected_bits": "0100101101",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 302,
+      "operator_id": 9,
+      "data": 14,
+      "protected_bits": "0100101110",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 303,
+      "operator_id": 9,
+      "data": 15,
+      "protected_bits": "0100101111",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 304,
+      "operator_id": 9,
+      "data": 16,
+      "protected_bits": "0100110000",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 305,
+      "operator_id": 9,
+      "data": 17,
+      "protected_bits": "0100110001",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 306,
+      "operator_id": 9,
+      "data": 18,
+      "protected_bits": "0100110010",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 307,
+      "operator_id": 9,
+      "data": 19,
+      "protected_bits": "0100110011",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 308,
+      "operator_id": 9,
+      "data": 20,
+      "protected_bits": "0100110100",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 309,
+      "operator_id": 9,
+      "data": 21,
+      "protected_bits": "0100110101",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 310,
+      "operator_id": 9,
+      "data": 22,
+      "protected_bits": "0100110110",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 311,
+      "operator_id": 9,
+      "data": 23,
+      "protected_bits": "0100110111",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 312,
+      "operator_id": 9,
+      "data": 24,
+      "protected_bits": "0100111000",
+      "answer": "000110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 313,
+      "operator_id": 9,
+      "data": 25,
+      "protected_bits": "0100111001",
+      "answer": "000111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 314,
+      "operator_id": 9,
+      "data": 26,
+      "protected_bits": "0100111010",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 315,
+      "operator_id": 9,
+      "data": 27,
+      "protected_bits": "0100111011",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 316,
+      "operator_id": 9,
+      "data": 28,
+      "protected_bits": "0100111100",
+      "answer": "000111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 317,
+      "operator_id": 9,
+      "data": 29,
+      "protected_bits": "0100111101",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 318,
+      "operator_id": 9,
+      "data": 30,
+      "protected_bits": "0100111110",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 319,
+      "operator_id": 9,
+      "data": 31,
+      "protected_bits": "0100111111",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 320,
+      "operator_id": 10,
+      "data": 0,
+      "protected_bits": "0101000000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 321,
+      "operator_id": 10,
+      "data": 1,
+      "protected_bits": "0101000001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 322,
+      "operator_id": 10,
+      "data": 2,
+      "protected_bits": "0101000010",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 323,
+      "operator_id": 10,
+      "data": 3,
+      "protected_bits": "0101000011",
+      "answer": "000110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 324,
+      "operator_id": 10,
+      "data": 4,
+      "protected_bits": "0101000100",
+      "answer": "001000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 325,
+      "operator_id": 10,
+      "data": 5,
+      "protected_bits": "0101000101",
+      "answer": "001010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 326,
+      "operator_id": 10,
+      "data": 6,
+      "protected_bits": "0101000110",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 327,
+      "operator_id": 10,
+      "data": 7,
+      "protected_bits": "0101000111",
+      "answer": "001110",
+      "split": "train"
+    },
+    {
+      "case_id": 328,
+      "operator_id": 10,
+      "data": 8,
+      "protected_bits": "0101001000",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 329,
+      "operator_id": 10,
+      "data": 9,
+      "protected_bits": "0101001001",
+      "answer": "010010",
+      "split": "train"
+    },
+    {
+      "case_id": 330,
+      "operator_id": 10,
+      "data": 10,
+      "protected_bits": "0101001010",
+      "answer": "010100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 331,
+      "operator_id": 10,
+      "data": 11,
+      "protected_bits": "0101001011",
+      "answer": "010110",
+      "split": "train"
+    },
+    {
+      "case_id": 332,
+      "operator_id": 10,
+      "data": 12,
+      "protected_bits": "0101001100",
+      "answer": "011000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 333,
+      "operator_id": 10,
+      "data": 13,
+      "protected_bits": "0101001101",
+      "answer": "011010",
+      "split": "train"
+    },
+    {
+      "case_id": 334,
+      "operator_id": 10,
+      "data": 14,
+      "protected_bits": "0101001110",
+      "answer": "011100",
+      "split": "train"
+    },
+    {
+      "case_id": 335,
+      "operator_id": 10,
+      "data": 15,
+      "protected_bits": "0101001111",
+      "answer": "011110",
+      "split": "train"
+    },
+    {
+      "case_id": 336,
+      "operator_id": 10,
+      "data": 16,
+      "protected_bits": "0101010000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 337,
+      "operator_id": 10,
+      "data": 17,
+      "protected_bits": "0101010001",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 338,
+      "operator_id": 10,
+      "data": 18,
+      "protected_bits": "0101010010",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 339,
+      "operator_id": 10,
+      "data": 19,
+      "protected_bits": "0101010011",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 340,
+      "operator_id": 10,
+      "data": 20,
+      "protected_bits": "0101010100",
+      "answer": "001001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 341,
+      "operator_id": 10,
+      "data": 21,
+      "protected_bits": "0101010101",
+      "answer": "001011",
+      "split": "train"
+    },
+    {
+      "case_id": 342,
+      "operator_id": 10,
+      "data": 22,
+      "protected_bits": "0101010110",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 343,
+      "operator_id": 10,
+      "data": 23,
+      "protected_bits": "0101010111",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 344,
+      "operator_id": 10,
+      "data": 24,
+      "protected_bits": "0101011000",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 345,
+      "operator_id": 10,
+      "data": 25,
+      "protected_bits": "0101011001",
+      "answer": "010011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 346,
+      "operator_id": 10,
+      "data": 26,
+      "protected_bits": "0101011010",
+      "answer": "010101",
+      "split": "train"
+    },
+    {
+      "case_id": 347,
+      "operator_id": 10,
+      "data": 27,
+      "protected_bits": "0101011011",
+      "answer": "010111",
+      "split": "train"
+    },
+    {
+      "case_id": 348,
+      "operator_id": 10,
+      "data": 28,
+      "protected_bits": "0101011100",
+      "answer": "011001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 349,
+      "operator_id": 10,
+      "data": 29,
+      "protected_bits": "0101011101",
+      "answer": "011011",
+      "split": "train"
+    },
+    {
+      "case_id": 350,
+      "operator_id": 10,
+      "data": 30,
+      "protected_bits": "0101011110",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 351,
+      "operator_id": 10,
+      "data": 31,
+      "protected_bits": "0101011111",
+      "answer": "011111",
+      "split": "train"
+    },
+    {
+      "case_id": 352,
+      "operator_id": 11,
+      "data": 0,
+      "protected_bits": "0101100000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 353,
+      "operator_id": 11,
+      "data": 1,
+      "protected_bits": "0101100001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 354,
+      "operator_id": 11,
+      "data": 2,
+      "protected_bits": "0101100010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 355,
+      "operator_id": 11,
+      "data": 3,
+      "protected_bits": "0101100011",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 356,
+      "operator_id": 11,
+      "data": 4,
+      "protected_bits": "0101100100",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 357,
+      "operator_id": 11,
+      "data": 5,
+      "protected_bits": "0101100101",
+      "answer": "000101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 358,
+      "operator_id": 11,
+      "data": 6,
+      "protected_bits": "0101100110",
+      "answer": "000110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 359,
+      "operator_id": 11,
+      "data": 7,
+      "protected_bits": "0101100111",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 360,
+      "operator_id": 11,
+      "data": 8,
+      "protected_bits": "0101101000",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 361,
+      "operator_id": 11,
+      "data": 9,
+      "protected_bits": "0101101001",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 362,
+      "operator_id": 11,
+      "data": 10,
+      "protected_bits": "0101101010",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 363,
+      "operator_id": 11,
+      "data": 11,
+      "protected_bits": "0101101011",
+      "answer": "001011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 364,
+      "operator_id": 11,
+      "data": 12,
+      "protected_bits": "0101101100",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 365,
+      "operator_id": 11,
+      "data": 13,
+      "protected_bits": "0101101101",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 366,
+      "operator_id": 11,
+      "data": 14,
+      "protected_bits": "0101101110",
+      "answer": "001110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 367,
+      "operator_id": 11,
+      "data": 15,
+      "protected_bits": "0101101111",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 368,
+      "operator_id": 11,
+      "data": 16,
+      "protected_bits": "0101110000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 369,
+      "operator_id": 11,
+      "data": 17,
+      "protected_bits": "0101110001",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 370,
+      "operator_id": 11,
+      "data": 18,
+      "protected_bits": "0101110010",
+      "answer": "001001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 371,
+      "operator_id": 11,
+      "data": 19,
+      "protected_bits": "0101110011",
+      "answer": "011001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 372,
+      "operator_id": 11,
+      "data": 20,
+      "protected_bits": "0101110100",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 373,
+      "operator_id": 11,
+      "data": 21,
+      "protected_bits": "0101110101",
+      "answer": "010101",
+      "split": "train"
+    },
+    {
+      "case_id": 374,
+      "operator_id": 11,
+      "data": 22,
+      "protected_bits": "0101110110",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 375,
+      "operator_id": 11,
+      "data": 23,
+      "protected_bits": "0101110111",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 376,
+      "operator_id": 11,
+      "data": 24,
+      "protected_bits": "0101111000",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 377,
+      "operator_id": 11,
+      "data": 25,
+      "protected_bits": "0101111001",
+      "answer": "010011",
+      "split": "train"
+    },
+    {
+      "case_id": 378,
+      "operator_id": 11,
+      "data": 26,
+      "protected_bits": "0101111010",
+      "answer": "001011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 379,
+      "operator_id": 11,
+      "data": 27,
+      "protected_bits": "0101111011",
+      "answer": "011011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 380,
+      "operator_id": 11,
+      "data": 28,
+      "protected_bits": "0101111100",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 381,
+      "operator_id": 11,
+      "data": 29,
+      "protected_bits": "0101111101",
+      "answer": "010111",
+      "split": "train"
+    },
+    {
+      "case_id": 382,
+      "operator_id": 11,
+      "data": 30,
+      "protected_bits": "0101111110",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 383,
+      "operator_id": 11,
+      "data": 31,
+      "protected_bits": "0101111111",
+      "answer": "011111",
+      "split": "train"
+    },
+    {
+      "case_id": 384,
+      "operator_id": 12,
+      "data": 0,
+      "protected_bits": "0110000000",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 385,
+      "operator_id": 12,
+      "data": 1,
+      "protected_bits": "0110000001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 386,
+      "operator_id": 12,
+      "data": 2,
+      "protected_bits": "0110000010",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 387,
+      "operator_id": 12,
+      "data": 3,
+      "protected_bits": "0110000011",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 388,
+      "operator_id": 12,
+      "data": 4,
+      "protected_bits": "0110000100",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 389,
+      "operator_id": 12,
+      "data": 5,
+      "protected_bits": "0110000101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 390,
+      "operator_id": 12,
+      "data": 6,
+      "protected_bits": "0110000110",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 391,
+      "operator_id": 12,
+      "data": 7,
+      "protected_bits": "0110000111",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 392,
+      "operator_id": 12,
+      "data": 8,
+      "protected_bits": "0110001000",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 393,
+      "operator_id": 12,
+      "data": 9,
+      "protected_bits": "0110001001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 394,
+      "operator_id": 12,
+      "data": 10,
+      "protected_bits": "0110001010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 395,
+      "operator_id": 12,
+      "data": 11,
+      "protected_bits": "0110001011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 396,
+      "operator_id": 12,
+      "data": 12,
+      "protected_bits": "0110001100",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 397,
+      "operator_id": 12,
+      "data": 13,
+      "protected_bits": "0110001101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 398,
+      "operator_id": 12,
+      "data": 14,
+      "protected_bits": "0110001110",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 399,
+      "operator_id": 12,
+      "data": 15,
+      "protected_bits": "0110001111",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 400,
+      "operator_id": 12,
+      "data": 16,
+      "protected_bits": "0110010000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 401,
+      "operator_id": 12,
+      "data": 17,
+      "protected_bits": "0110010001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 402,
+      "operator_id": 12,
+      "data": 18,
+      "protected_bits": "0110010010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 403,
+      "operator_id": 12,
+      "data": 19,
+      "protected_bits": "0110010011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 404,
+      "operator_id": 12,
+      "data": 20,
+      "protected_bits": "0110010100",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 405,
+      "operator_id": 12,
+      "data": 21,
+      "protected_bits": "0110010101",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 406,
+      "operator_id": 12,
+      "data": 22,
+      "protected_bits": "0110010110",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 407,
+      "operator_id": 12,
+      "data": 23,
+      "protected_bits": "0110010111",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 408,
+      "operator_id": 12,
+      "data": 24,
+      "protected_bits": "0110011000",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 409,
+      "operator_id": 12,
+      "data": 25,
+      "protected_bits": "0110011001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 410,
+      "operator_id": 12,
+      "data": 26,
+      "protected_bits": "0110011010",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 411,
+      "operator_id": 12,
+      "data": 27,
+      "protected_bits": "0110011011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 412,
+      "operator_id": 12,
+      "data": 28,
+      "protected_bits": "0110011100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 413,
+      "operator_id": 12,
+      "data": 29,
+      "protected_bits": "0110011101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 414,
+      "operator_id": 12,
+      "data": 30,
+      "protected_bits": "0110011110",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 415,
+      "operator_id": 12,
+      "data": 31,
+      "protected_bits": "0110011111",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 416,
+      "operator_id": 13,
+      "data": 0,
+      "protected_bits": "0110100000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 417,
+      "operator_id": 13,
+      "data": 1,
+      "protected_bits": "0110100001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 418,
+      "operator_id": 13,
+      "data": 2,
+      "protected_bits": "0110100010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 419,
+      "operator_id": 13,
+      "data": 3,
+      "protected_bits": "0110100011",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 420,
+      "operator_id": 13,
+      "data": 4,
+      "protected_bits": "0110100100",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 421,
+      "operator_id": 13,
+      "data": 5,
+      "protected_bits": "0110100101",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 422,
+      "operator_id": 13,
+      "data": 6,
+      "protected_bits": "0110100110",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 423,
+      "operator_id": 13,
+      "data": 7,
+      "protected_bits": "0110100111",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 424,
+      "operator_id": 13,
+      "data": 8,
+      "protected_bits": "0110101000",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 425,
+      "operator_id": 13,
+      "data": 9,
+      "protected_bits": "0110101001",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 426,
+      "operator_id": 13,
+      "data": 10,
+      "protected_bits": "0110101010",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 427,
+      "operator_id": 13,
+      "data": 11,
+      "protected_bits": "0110101011",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 428,
+      "operator_id": 13,
+      "data": 12,
+      "protected_bits": "0110101100",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 429,
+      "operator_id": 13,
+      "data": 13,
+      "protected_bits": "0110101101",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 430,
+      "operator_id": 13,
+      "data": 14,
+      "protected_bits": "0110101110",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 431,
+      "operator_id": 13,
+      "data": 15,
+      "protected_bits": "0110101111",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 432,
+      "operator_id": 13,
+      "data": 16,
+      "protected_bits": "0110110000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 433,
+      "operator_id": 13,
+      "data": 17,
+      "protected_bits": "0110110001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 434,
+      "operator_id": 13,
+      "data": 18,
+      "protected_bits": "0110110010",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 435,
+      "operator_id": 13,
+      "data": 19,
+      "protected_bits": "0110110011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 436,
+      "operator_id": 13,
+      "data": 20,
+      "protected_bits": "0110110100",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 437,
+      "operator_id": 13,
+      "data": 21,
+      "protected_bits": "0110110101",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 438,
+      "operator_id": 13,
+      "data": 22,
+      "protected_bits": "0110110110",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 439,
+      "operator_id": 13,
+      "data": 23,
+      "protected_bits": "0110110111",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 440,
+      "operator_id": 13,
+      "data": 24,
+      "protected_bits": "0110111000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 441,
+      "operator_id": 13,
+      "data": 25,
+      "protected_bits": "0110111001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 442,
+      "operator_id": 13,
+      "data": 26,
+      "protected_bits": "0110111010",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 443,
+      "operator_id": 13,
+      "data": 27,
+      "protected_bits": "0110111011",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 444,
+      "operator_id": 13,
+      "data": 28,
+      "protected_bits": "0110111100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 445,
+      "operator_id": 13,
+      "data": 29,
+      "protected_bits": "0110111101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 446,
+      "operator_id": 13,
+      "data": 30,
+      "protected_bits": "0110111110",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 447,
+      "operator_id": 13,
+      "data": 31,
+      "protected_bits": "0110111111",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 448,
+      "operator_id": 14,
+      "data": 0,
+      "protected_bits": "0111000000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 449,
+      "operator_id": 14,
+      "data": 1,
+      "protected_bits": "0111000001",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 450,
+      "operator_id": 14,
+      "data": 2,
+      "protected_bits": "0111000010",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 451,
+      "operator_id": 14,
+      "data": 3,
+      "protected_bits": "0111000011",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 452,
+      "operator_id": 14,
+      "data": 4,
+      "protected_bits": "0111000100",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 453,
+      "operator_id": 14,
+      "data": 5,
+      "protected_bits": "0111000101",
+      "answer": "001111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 454,
+      "operator_id": 14,
+      "data": 6,
+      "protected_bits": "0111000110",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 455,
+      "operator_id": 14,
+      "data": 7,
+      "protected_bits": "0111000111",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 456,
+      "operator_id": 14,
+      "data": 8,
+      "protected_bits": "0111001000",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 457,
+      "operator_id": 14,
+      "data": 9,
+      "protected_bits": "0111001001",
+      "answer": "011011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 458,
+      "operator_id": 14,
+      "data": 10,
+      "protected_bits": "0111001010",
+      "answer": "011110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 459,
+      "operator_id": 14,
+      "data": 11,
+      "protected_bits": "0111001011",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 460,
+      "operator_id": 14,
+      "data": 12,
+      "protected_bits": "0111001100",
+      "answer": "010100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 461,
+      "operator_id": 14,
+      "data": 13,
+      "protected_bits": "0111001101",
+      "answer": "010111",
+      "split": "train"
+    },
+    {
+      "case_id": 462,
+      "operator_id": 14,
+      "data": 14,
+      "protected_bits": "0111001110",
+      "answer": "010010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 463,
+      "operator_id": 14,
+      "data": 15,
+      "protected_bits": "0111001111",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 464,
+      "operator_id": 14,
+      "data": 16,
+      "protected_bits": "0111010000",
+      "answer": "010001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 465,
+      "operator_id": 14,
+      "data": 17,
+      "protected_bits": "0111010001",
+      "answer": "010010",
+      "split": "train"
+    },
+    {
+      "case_id": 466,
+      "operator_id": 14,
+      "data": 18,
+      "protected_bits": "0111010010",
+      "answer": "010111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 467,
+      "operator_id": 14,
+      "data": 19,
+      "protected_bits": "0111010011",
+      "answer": "010100",
+      "split": "train"
+    },
+    {
+      "case_id": 468,
+      "operator_id": 14,
+      "data": 20,
+      "protected_bits": "0111010100",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 469,
+      "operator_id": 14,
+      "data": 21,
+      "protected_bits": "0111010101",
+      "answer": "011110",
+      "split": "train"
+    },
+    {
+      "case_id": 470,
+      "operator_id": 14,
+      "data": 22,
+      "protected_bits": "0111010110",
+      "answer": "011011",
+      "split": "train"
+    },
+    {
+      "case_id": 471,
+      "operator_id": 14,
+      "data": 23,
+      "protected_bits": "0111010111",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 472,
+      "operator_id": 14,
+      "data": 24,
+      "protected_bits": "0111011000",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 473,
+      "operator_id": 14,
+      "data": 25,
+      "protected_bits": "0111011001",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 474,
+      "operator_id": 14,
+      "data": 26,
+      "protected_bits": "0111011010",
+      "answer": "001111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 475,
+      "operator_id": 14,
+      "data": 27,
+      "protected_bits": "0111011011",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 476,
+      "operator_id": 14,
+      "data": 28,
+      "protected_bits": "0111011100",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 477,
+      "operator_id": 14,
+      "data": 29,
+      "protected_bits": "0111011101",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 478,
+      "operator_id": 14,
+      "data": 30,
+      "protected_bits": "0111011110",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 479,
+      "operator_id": 14,
+      "data": 31,
+      "protected_bits": "0111011111",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 480,
+      "operator_id": 15,
+      "data": 0,
+      "protected_bits": "0111100000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 481,
+      "operator_id": 15,
+      "data": 1,
+      "protected_bits": "0111100001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 482,
+      "operator_id": 15,
+      "data": 2,
+      "protected_bits": "0111100010",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 483,
+      "operator_id": 15,
+      "data": 3,
+      "protected_bits": "0111100011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 484,
+      "operator_id": 15,
+      "data": 4,
+      "protected_bits": "0111100100",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 485,
+      "operator_id": 15,
+      "data": 5,
+      "protected_bits": "0111100101",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 486,
+      "operator_id": 15,
+      "data": 6,
+      "protected_bits": "0111100110",
+      "answer": "000101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 487,
+      "operator_id": 15,
+      "data": 7,
+      "protected_bits": "0111100111",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 488,
+      "operator_id": 15,
+      "data": 8,
+      "protected_bits": "0111101000",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 489,
+      "operator_id": 15,
+      "data": 9,
+      "protected_bits": "0111101001",
+      "answer": "001101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 490,
+      "operator_id": 15,
+      "data": 10,
+      "protected_bits": "0111101010",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 491,
+      "operator_id": 15,
+      "data": 11,
+      "protected_bits": "0111101011",
+      "answer": "001110",
+      "split": "train"
+    },
+    {
+      "case_id": 492,
+      "operator_id": 15,
+      "data": 12,
+      "protected_bits": "0111101100",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 493,
+      "operator_id": 15,
+      "data": 13,
+      "protected_bits": "0111101101",
+      "answer": "001011",
+      "split": "train"
+    },
+    {
+      "case_id": 494,
+      "operator_id": 15,
+      "data": 14,
+      "protected_bits": "0111101110",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 495,
+      "operator_id": 15,
+      "data": 15,
+      "protected_bits": "0111101111",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 496,
+      "operator_id": 15,
+      "data": 16,
+      "protected_bits": "0111110000",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 497,
+      "operator_id": 15,
+      "data": 17,
+      "protected_bits": "0111110001",
+      "answer": "011001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 498,
+      "operator_id": 15,
+      "data": 18,
+      "protected_bits": "0111110010",
+      "answer": "011011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 499,
+      "operator_id": 15,
+      "data": 19,
+      "protected_bits": "0111110011",
+      "answer": "011010",
+      "split": "train"
+    },
+    {
+      "case_id": 500,
+      "operator_id": 15,
+      "data": 20,
+      "protected_bits": "0111110100",
+      "answer": "011110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 501,
+      "operator_id": 15,
+      "data": 21,
+      "protected_bits": "0111110101",
+      "answer": "011111",
+      "split": "train"
+    },
+    {
+      "case_id": 502,
+      "operator_id": 15,
+      "data": 22,
+      "protected_bits": "0111110110",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 503,
+      "operator_id": 15,
+      "data": 23,
+      "protected_bits": "0111110111",
+      "answer": "011100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 504,
+      "operator_id": 15,
+      "data": 24,
+      "protected_bits": "0111111000",
+      "answer": "010100",
+      "split": "train"
+    },
+    {
+      "case_id": 505,
+      "operator_id": 15,
+      "data": 25,
+      "protected_bits": "0111111001",
+      "answer": "010101",
+      "split": "train"
+    },
+    {
+      "case_id": 506,
+      "operator_id": 15,
+      "data": 26,
+      "protected_bits": "0111111010",
+      "answer": "010111",
+      "split": "train"
+    },
+    {
+      "case_id": 507,
+      "operator_id": 15,
+      "data": 27,
+      "protected_bits": "0111111011",
+      "answer": "010110",
+      "split": "train"
+    },
+    {
+      "case_id": 508,
+      "operator_id": 15,
+      "data": 28,
+      "protected_bits": "0111111100",
+      "answer": "010010",
+      "split": "train"
+    },
+    {
+      "case_id": 509,
+      "operator_id": 15,
+      "data": 29,
+      "protected_bits": "0111111101",
+      "answer": "010011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 510,
+      "operator_id": 15,
+      "data": 30,
+      "protected_bits": "0111111110",
+      "answer": "010001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 511,
+      "operator_id": 15,
+      "data": 31,
+      "protected_bits": "0111111111",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 512,
+      "operator_id": 16,
+      "data": 0,
+      "protected_bits": "1000000000",
+      "answer": "011111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 513,
+      "operator_id": 16,
+      "data": 1,
+      "protected_bits": "1000000001",
+      "answer": "011110",
+      "split": "train"
+    },
+    {
+      "case_id": 514,
+      "operator_id": 16,
+      "data": 2,
+      "protected_bits": "1000000010",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 515,
+      "operator_id": 16,
+      "data": 3,
+      "protected_bits": "1000000011",
+      "answer": "011100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 516,
+      "operator_id": 16,
+      "data": 4,
+      "protected_bits": "1000000100",
+      "answer": "011011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 517,
+      "operator_id": 16,
+      "data": 5,
+      "protected_bits": "1000000101",
+      "answer": "011010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 518,
+      "operator_id": 16,
+      "data": 6,
+      "protected_bits": "1000000110",
+      "answer": "011001",
+      "split": "train"
+    },
+    {
+      "case_id": 519,
+      "operator_id": 16,
+      "data": 7,
+      "protected_bits": "1000000111",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 520,
+      "operator_id": 16,
+      "data": 8,
+      "protected_bits": "1000001000",
+      "answer": "010111",
+      "split": "train"
+    },
+    {
+      "case_id": 521,
+      "operator_id": 16,
+      "data": 9,
+      "protected_bits": "1000001001",
+      "answer": "010110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 522,
+      "operator_id": 16,
+      "data": 10,
+      "protected_bits": "1000001010",
+      "answer": "010101",
+      "split": "train"
+    },
+    {
+      "case_id": 523,
+      "operator_id": 16,
+      "data": 11,
+      "protected_bits": "1000001011",
+      "answer": "010100",
+      "split": "train"
+    },
+    {
+      "case_id": 524,
+      "operator_id": 16,
+      "data": 12,
+      "protected_bits": "1000001100",
+      "answer": "010011",
+      "split": "train"
+    },
+    {
+      "case_id": 525,
+      "operator_id": 16,
+      "data": 13,
+      "protected_bits": "1000001101",
+      "answer": "010010",
+      "split": "train"
+    },
+    {
+      "case_id": 526,
+      "operator_id": 16,
+      "data": 14,
+      "protected_bits": "1000001110",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 527,
+      "operator_id": 16,
+      "data": 15,
+      "protected_bits": "1000001111",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 528,
+      "operator_id": 16,
+      "data": 16,
+      "protected_bits": "1000010000",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 529,
+      "operator_id": 16,
+      "data": 17,
+      "protected_bits": "1000010001",
+      "answer": "001110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 530,
+      "operator_id": 16,
+      "data": 18,
+      "protected_bits": "1000010010",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 531,
+      "operator_id": 16,
+      "data": 19,
+      "protected_bits": "1000010011",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 532,
+      "operator_id": 16,
+      "data": 20,
+      "protected_bits": "1000010100",
+      "answer": "001011",
+      "split": "train"
+    },
+    {
+      "case_id": 533,
+      "operator_id": 16,
+      "data": 21,
+      "protected_bits": "1000010101",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 534,
+      "operator_id": 16,
+      "data": 22,
+      "protected_bits": "1000010110",
+      "answer": "001001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 535,
+      "operator_id": 16,
+      "data": 23,
+      "protected_bits": "1000010111",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 536,
+      "operator_id": 16,
+      "data": 24,
+      "protected_bits": "1000011000",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 537,
+      "operator_id": 16,
+      "data": 25,
+      "protected_bits": "1000011001",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 538,
+      "operator_id": 16,
+      "data": 26,
+      "protected_bits": "1000011010",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 539,
+      "operator_id": 16,
+      "data": 27,
+      "protected_bits": "1000011011",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 540,
+      "operator_id": 16,
+      "data": 28,
+      "protected_bits": "1000011100",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 541,
+      "operator_id": 16,
+      "data": 29,
+      "protected_bits": "1000011101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 542,
+      "operator_id": 16,
+      "data": 30,
+      "protected_bits": "1000011110",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 543,
+      "operator_id": 16,
+      "data": 31,
+      "protected_bits": "1000011111",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 544,
+      "operator_id": 17,
+      "data": 0,
+      "protected_bits": "1000100000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 545,
+      "operator_id": 17,
+      "data": 1,
+      "protected_bits": "1000100001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 546,
+      "operator_id": 17,
+      "data": 2,
+      "protected_bits": "1000100010",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 547,
+      "operator_id": 17,
+      "data": 3,
+      "protected_bits": "1000100011",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 548,
+      "operator_id": 17,
+      "data": 4,
+      "protected_bits": "1000100100",
+      "answer": "001000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 549,
+      "operator_id": 17,
+      "data": 5,
+      "protected_bits": "1000100101",
+      "answer": "001010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 550,
+      "operator_id": 17,
+      "data": 6,
+      "protected_bits": "1000100110",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 551,
+      "operator_id": 17,
+      "data": 7,
+      "protected_bits": "1000100111",
+      "answer": "001110",
+      "split": "train"
+    },
+    {
+      "case_id": 552,
+      "operator_id": 17,
+      "data": 8,
+      "protected_bits": "1000101000",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 553,
+      "operator_id": 17,
+      "data": 9,
+      "protected_bits": "1000101001",
+      "answer": "010010",
+      "split": "train"
+    },
+    {
+      "case_id": 554,
+      "operator_id": 17,
+      "data": 10,
+      "protected_bits": "1000101010",
+      "answer": "010100",
+      "split": "train"
+    },
+    {
+      "case_id": 555,
+      "operator_id": 17,
+      "data": 11,
+      "protected_bits": "1000101011",
+      "answer": "010110",
+      "split": "train"
+    },
+    {
+      "case_id": 556,
+      "operator_id": 17,
+      "data": 12,
+      "protected_bits": "1000101100",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 557,
+      "operator_id": 17,
+      "data": 13,
+      "protected_bits": "1000101101",
+      "answer": "011010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 558,
+      "operator_id": 17,
+      "data": 14,
+      "protected_bits": "1000101110",
+      "answer": "011100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 559,
+      "operator_id": 17,
+      "data": 15,
+      "protected_bits": "1000101111",
+      "answer": "011110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 560,
+      "operator_id": 17,
+      "data": 16,
+      "protected_bits": "1000110000",
+      "answer": "100000",
+      "split": "train"
+    },
+    {
+      "case_id": 561,
+      "operator_id": 17,
+      "data": 17,
+      "protected_bits": "1000110001",
+      "answer": "100010",
+      "split": "train"
+    },
+    {
+      "case_id": 562,
+      "operator_id": 17,
+      "data": 18,
+      "protected_bits": "1000110010",
+      "answer": "100100",
+      "split": "train"
+    },
+    {
+      "case_id": 563,
+      "operator_id": 17,
+      "data": 19,
+      "protected_bits": "1000110011",
+      "answer": "100110",
+      "split": "train"
+    },
+    {
+      "case_id": 564,
+      "operator_id": 17,
+      "data": 20,
+      "protected_bits": "1000110100",
+      "answer": "101000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 565,
+      "operator_id": 17,
+      "data": 21,
+      "protected_bits": "1000110101",
+      "answer": "101010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 566,
+      "operator_id": 17,
+      "data": 22,
+      "protected_bits": "1000110110",
+      "answer": "101100",
+      "split": "train"
+    },
+    {
+      "case_id": 567,
+      "operator_id": 17,
+      "data": 23,
+      "protected_bits": "1000110111",
+      "answer": "101110",
+      "split": "train"
+    },
+    {
+      "case_id": 568,
+      "operator_id": 17,
+      "data": 24,
+      "protected_bits": "1000111000",
+      "answer": "110000",
+      "split": "train"
+    },
+    {
+      "case_id": 569,
+      "operator_id": 17,
+      "data": 25,
+      "protected_bits": "1000111001",
+      "answer": "110010",
+      "split": "train"
+    },
+    {
+      "case_id": 570,
+      "operator_id": 17,
+      "data": 26,
+      "protected_bits": "1000111010",
+      "answer": "110100",
+      "split": "train"
+    },
+    {
+      "case_id": 571,
+      "operator_id": 17,
+      "data": 27,
+      "protected_bits": "1000111011",
+      "answer": "110110",
+      "split": "train"
+    },
+    {
+      "case_id": 572,
+      "operator_id": 17,
+      "data": 28,
+      "protected_bits": "1000111100",
+      "answer": "111000",
+      "split": "train"
+    },
+    {
+      "case_id": 573,
+      "operator_id": 17,
+      "data": 29,
+      "protected_bits": "1000111101",
+      "answer": "111010",
+      "split": "train"
+    },
+    {
+      "case_id": 574,
+      "operator_id": 17,
+      "data": 30,
+      "protected_bits": "1000111110",
+      "answer": "111100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 575,
+      "operator_id": 17,
+      "data": 31,
+      "protected_bits": "1000111111",
+      "answer": "111110",
+      "split": "train"
+    },
+    {
+      "case_id": 576,
+      "operator_id": 18,
+      "data": 0,
+      "protected_bits": "1001000000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 577,
+      "operator_id": 18,
+      "data": 1,
+      "protected_bits": "1001000001",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 578,
+      "operator_id": 18,
+      "data": 2,
+      "protected_bits": "1001000010",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 579,
+      "operator_id": 18,
+      "data": 3,
+      "protected_bits": "1001000011",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 580,
+      "operator_id": 18,
+      "data": 4,
+      "protected_bits": "1001000100",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 581,
+      "operator_id": 18,
+      "data": 5,
+      "protected_bits": "1001000101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 582,
+      "operator_id": 18,
+      "data": 6,
+      "protected_bits": "1001000110",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 583,
+      "operator_id": 18,
+      "data": 7,
+      "protected_bits": "1001000111",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 584,
+      "operator_id": 18,
+      "data": 8,
+      "protected_bits": "1001001000",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 585,
+      "operator_id": 18,
+      "data": 9,
+      "protected_bits": "1001001001",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 586,
+      "operator_id": 18,
+      "data": 10,
+      "protected_bits": "1001001010",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 587,
+      "operator_id": 18,
+      "data": 11,
+      "protected_bits": "1001001011",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 588,
+      "operator_id": 18,
+      "data": 12,
+      "protected_bits": "1001001100",
+      "answer": "000110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 589,
+      "operator_id": 18,
+      "data": 13,
+      "protected_bits": "1001001101",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 590,
+      "operator_id": 18,
+      "data": 14,
+      "protected_bits": "1001001110",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 591,
+      "operator_id": 18,
+      "data": 15,
+      "protected_bits": "1001001111",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 592,
+      "operator_id": 18,
+      "data": 16,
+      "protected_bits": "1001010000",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 593,
+      "operator_id": 18,
+      "data": 17,
+      "protected_bits": "1001010001",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 594,
+      "operator_id": 18,
+      "data": 18,
+      "protected_bits": "1001010010",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 595,
+      "operator_id": 18,
+      "data": 19,
+      "protected_bits": "1001010011",
+      "answer": "001001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 596,
+      "operator_id": 18,
+      "data": 20,
+      "protected_bits": "1001010100",
+      "answer": "001010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 597,
+      "operator_id": 18,
+      "data": 21,
+      "protected_bits": "1001010101",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 598,
+      "operator_id": 18,
+      "data": 22,
+      "protected_bits": "1001010110",
+      "answer": "001011",
+      "split": "train"
+    },
+    {
+      "case_id": 599,
+      "operator_id": 18,
+      "data": 23,
+      "protected_bits": "1001010111",
+      "answer": "001011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 600,
+      "operator_id": 18,
+      "data": 24,
+      "protected_bits": "1001011000",
+      "answer": "001100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 601,
+      "operator_id": 18,
+      "data": 25,
+      "protected_bits": "1001011001",
+      "answer": "001100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 602,
+      "operator_id": 18,
+      "data": 26,
+      "protected_bits": "1001011010",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 603,
+      "operator_id": 18,
+      "data": 27,
+      "protected_bits": "1001011011",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 604,
+      "operator_id": 18,
+      "data": 28,
+      "protected_bits": "1001011100",
+      "answer": "001110",
+      "split": "train"
+    },
+    {
+      "case_id": 605,
+      "operator_id": 18,
+      "data": 29,
+      "protected_bits": "1001011101",
+      "answer": "001110",
+      "split": "train"
+    },
+    {
+      "case_id": 606,
+      "operator_id": 18,
+      "data": 30,
+      "protected_bits": "1001011110",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 607,
+      "operator_id": 18,
+      "data": 31,
+      "protected_bits": "1001011111",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 608,
+      "operator_id": 19,
+      "data": 0,
+      "protected_bits": "1001100000",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 609,
+      "operator_id": 19,
+      "data": 1,
+      "protected_bits": "1001100001",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 610,
+      "operator_id": 19,
+      "data": 2,
+      "protected_bits": "1001100010",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 611,
+      "operator_id": 19,
+      "data": 3,
+      "protected_bits": "1001100011",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 612,
+      "operator_id": 19,
+      "data": 4,
+      "protected_bits": "1001100100",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 613,
+      "operator_id": 19,
+      "data": 5,
+      "protected_bits": "1001100101",
+      "answer": "010010",
+      "split": "train"
+    },
+    {
+      "case_id": 614,
+      "operator_id": 19,
+      "data": 6,
+      "protected_bits": "1001100110",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 615,
+      "operator_id": 19,
+      "data": 7,
+      "protected_bits": "1001100111",
+      "answer": "010011",
+      "split": "train"
+    },
+    {
+      "case_id": 616,
+      "operator_id": 19,
+      "data": 8,
+      "protected_bits": "1001101000",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 617,
+      "operator_id": 19,
+      "data": 9,
+      "protected_bits": "1001101001",
+      "answer": "010100",
+      "split": "train"
+    },
+    {
+      "case_id": 618,
+      "operator_id": 19,
+      "data": 10,
+      "protected_bits": "1001101010",
+      "answer": "000101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 619,
+      "operator_id": 19,
+      "data": 11,
+      "protected_bits": "1001101011",
+      "answer": "010101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 620,
+      "operator_id": 19,
+      "data": 12,
+      "protected_bits": "1001101100",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 621,
+      "operator_id": 19,
+      "data": 13,
+      "protected_bits": "1001101101",
+      "answer": "010110",
+      "split": "train"
+    },
+    {
+      "case_id": 622,
+      "operator_id": 19,
+      "data": 14,
+      "protected_bits": "1001101110",
+      "answer": "000111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 623,
+      "operator_id": 19,
+      "data": 15,
+      "protected_bits": "1001101111",
+      "answer": "010111",
+      "split": "train"
+    },
+    {
+      "case_id": 624,
+      "operator_id": 19,
+      "data": 16,
+      "protected_bits": "1001110000",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 625,
+      "operator_id": 19,
+      "data": 17,
+      "protected_bits": "1001110001",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 626,
+      "operator_id": 19,
+      "data": 18,
+      "protected_bits": "1001110010",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 627,
+      "operator_id": 19,
+      "data": 19,
+      "protected_bits": "1001110011",
+      "answer": "011001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 628,
+      "operator_id": 19,
+      "data": 20,
+      "protected_bits": "1001110100",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 629,
+      "operator_id": 19,
+      "data": 21,
+      "protected_bits": "1001110101",
+      "answer": "011010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 630,
+      "operator_id": 19,
+      "data": 22,
+      "protected_bits": "1001110110",
+      "answer": "001011",
+      "split": "train"
+    },
+    {
+      "case_id": 631,
+      "operator_id": 19,
+      "data": 23,
+      "protected_bits": "1001110111",
+      "answer": "011011",
+      "split": "train"
+    },
+    {
+      "case_id": 632,
+      "operator_id": 19,
+      "data": 24,
+      "protected_bits": "1001111000",
+      "answer": "001100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 633,
+      "operator_id": 19,
+      "data": 25,
+      "protected_bits": "1001111001",
+      "answer": "011100",
+      "split": "train"
+    },
+    {
+      "case_id": 634,
+      "operator_id": 19,
+      "data": 26,
+      "protected_bits": "1001111010",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 635,
+      "operator_id": 19,
+      "data": 27,
+      "protected_bits": "1001111011",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 636,
+      "operator_id": 19,
+      "data": 28,
+      "protected_bits": "1001111100",
+      "answer": "001110",
+      "split": "train"
+    },
+    {
+      "case_id": 637,
+      "operator_id": 19,
+      "data": 29,
+      "protected_bits": "1001111101",
+      "answer": "011110",
+      "split": "train"
+    },
+    {
+      "case_id": 638,
+      "operator_id": 19,
+      "data": 30,
+      "protected_bits": "1001111110",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 639,
+      "operator_id": 19,
+      "data": 31,
+      "protected_bits": "1001111111",
+      "answer": "011111",
+      "split": "train"
+    },
+    {
+      "case_id": 640,
+      "operator_id": 20,
+      "data": 0,
+      "protected_bits": "1010000000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 641,
+      "operator_id": 20,
+      "data": 1,
+      "protected_bits": "1010000001",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 642,
+      "operator_id": 20,
+      "data": 2,
+      "protected_bits": "1010000010",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 643,
+      "operator_id": 20,
+      "data": 3,
+      "protected_bits": "1010000011",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 644,
+      "operator_id": 20,
+      "data": 4,
+      "protected_bits": "1010000100",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 645,
+      "operator_id": 20,
+      "data": 5,
+      "protected_bits": "1010000101",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 646,
+      "operator_id": 20,
+      "data": 6,
+      "protected_bits": "1010000110",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 647,
+      "operator_id": 20,
+      "data": 7,
+      "protected_bits": "1010000111",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 648,
+      "operator_id": 20,
+      "data": 8,
+      "protected_bits": "1010001000",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 649,
+      "operator_id": 20,
+      "data": 9,
+      "protected_bits": "1010001001",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 650,
+      "operator_id": 20,
+      "data": 10,
+      "protected_bits": "1010001010",
+      "answer": "010100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 651,
+      "operator_id": 20,
+      "data": 11,
+      "protected_bits": "1010001011",
+      "answer": "010101",
+      "split": "train"
+    },
+    {
+      "case_id": 652,
+      "operator_id": 20,
+      "data": 12,
+      "protected_bits": "1010001100",
+      "answer": "010010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 653,
+      "operator_id": 20,
+      "data": 13,
+      "protected_bits": "1010001101",
+      "answer": "010011",
+      "split": "train"
+    },
+    {
+      "case_id": 654,
+      "operator_id": 20,
+      "data": 14,
+      "protected_bits": "1010001110",
+      "answer": "010110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 655,
+      "operator_id": 20,
+      "data": 15,
+      "protected_bits": "1010001111",
+      "answer": "010111",
+      "split": "train"
+    },
+    {
+      "case_id": 656,
+      "operator_id": 20,
+      "data": 16,
+      "protected_bits": "1010010000",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 657,
+      "operator_id": 20,
+      "data": 17,
+      "protected_bits": "1010010001",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 658,
+      "operator_id": 20,
+      "data": 18,
+      "protected_bits": "1010010010",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 659,
+      "operator_id": 20,
+      "data": 19,
+      "protected_bits": "1010010011",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 660,
+      "operator_id": 20,
+      "data": 20,
+      "protected_bits": "1010010100",
+      "answer": "001010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 661,
+      "operator_id": 20,
+      "data": 21,
+      "protected_bits": "1010010101",
+      "answer": "001011",
+      "split": "train"
+    },
+    {
+      "case_id": 662,
+      "operator_id": 20,
+      "data": 22,
+      "protected_bits": "1010010110",
+      "answer": "001110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 663,
+      "operator_id": 20,
+      "data": 23,
+      "protected_bits": "1010010111",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 664,
+      "operator_id": 20,
+      "data": 24,
+      "protected_bits": "1010011000",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 665,
+      "operator_id": 20,
+      "data": 25,
+      "protected_bits": "1010011001",
+      "answer": "011001",
+      "split": "train"
+    },
+    {
+      "case_id": 666,
+      "operator_id": 20,
+      "data": 26,
+      "protected_bits": "1010011010",
+      "answer": "011100",
+      "split": "train"
+    },
+    {
+      "case_id": 667,
+      "operator_id": 20,
+      "data": 27,
+      "protected_bits": "1010011011",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 668,
+      "operator_id": 20,
+      "data": 28,
+      "protected_bits": "1010011100",
+      "answer": "011010",
+      "split": "train"
+    },
+    {
+      "case_id": 669,
+      "operator_id": 20,
+      "data": 29,
+      "protected_bits": "1010011101",
+      "answer": "011011",
+      "split": "train"
+    },
+    {
+      "case_id": 670,
+      "operator_id": 20,
+      "data": 30,
+      "protected_bits": "1010011110",
+      "answer": "011110",
+      "split": "train"
+    },
+    {
+      "case_id": 671,
+      "operator_id": 20,
+      "data": 31,
+      "protected_bits": "1010011111",
+      "answer": "011111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 672,
+      "operator_id": 21,
+      "data": 0,
+      "protected_bits": "1010100000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 673,
+      "operator_id": 21,
+      "data": 1,
+      "protected_bits": "1010100001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 674,
+      "operator_id": 21,
+      "data": 2,
+      "protected_bits": "1010100010",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 675,
+      "operator_id": 21,
+      "data": 3,
+      "protected_bits": "1010100011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 676,
+      "operator_id": 21,
+      "data": 4,
+      "protected_bits": "1010100100",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 677,
+      "operator_id": 21,
+      "data": 5,
+      "protected_bits": "1010100101",
+      "answer": "000110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 678,
+      "operator_id": 21,
+      "data": 6,
+      "protected_bits": "1010100110",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 679,
+      "operator_id": 21,
+      "data": 7,
+      "protected_bits": "1010100111",
+      "answer": "000101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 680,
+      "operator_id": 21,
+      "data": 8,
+      "protected_bits": "1010101000",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 681,
+      "operator_id": 21,
+      "data": 9,
+      "protected_bits": "1010101001",
+      "answer": "001110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 682,
+      "operator_id": 21,
+      "data": 10,
+      "protected_bits": "1010101010",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 683,
+      "operator_id": 21,
+      "data": 11,
+      "protected_bits": "1010101011",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 684,
+      "operator_id": 21,
+      "data": 12,
+      "protected_bits": "1010101100",
+      "answer": "001000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 685,
+      "operator_id": 21,
+      "data": 13,
+      "protected_bits": "1010101101",
+      "answer": "001001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 686,
+      "operator_id": 21,
+      "data": 14,
+      "protected_bits": "1010101110",
+      "answer": "001011",
+      "split": "train"
+    },
+    {
+      "case_id": 687,
+      "operator_id": 21,
+      "data": 15,
+      "protected_bits": "1010101111",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 688,
+      "operator_id": 21,
+      "data": 16,
+      "protected_bits": "1010110000",
+      "answer": "011111",
+      "split": "train"
+    },
+    {
+      "case_id": 689,
+      "operator_id": 21,
+      "data": 17,
+      "protected_bits": "1010110001",
+      "answer": "011110",
+      "split": "train"
+    },
+    {
+      "case_id": 690,
+      "operator_id": 21,
+      "data": 18,
+      "protected_bits": "1010110010",
+      "answer": "011100",
+      "split": "train"
+    },
+    {
+      "case_id": 691,
+      "operator_id": 21,
+      "data": 19,
+      "protected_bits": "1010110011",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 692,
+      "operator_id": 21,
+      "data": 20,
+      "protected_bits": "1010110100",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 693,
+      "operator_id": 21,
+      "data": 21,
+      "protected_bits": "1010110101",
+      "answer": "011001",
+      "split": "train"
+    },
+    {
+      "case_id": 694,
+      "operator_id": 21,
+      "data": 22,
+      "protected_bits": "1010110110",
+      "answer": "011011",
+      "split": "train"
+    },
+    {
+      "case_id": 695,
+      "operator_id": 21,
+      "data": 23,
+      "protected_bits": "1010110111",
+      "answer": "011010",
+      "split": "train"
+    },
+    {
+      "case_id": 696,
+      "operator_id": 21,
+      "data": 24,
+      "protected_bits": "1010111000",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 697,
+      "operator_id": 21,
+      "data": 25,
+      "protected_bits": "1010111001",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 698,
+      "operator_id": 21,
+      "data": 26,
+      "protected_bits": "1010111010",
+      "answer": "010011",
+      "split": "train"
+    },
+    {
+      "case_id": 699,
+      "operator_id": 21,
+      "data": 27,
+      "protected_bits": "1010111011",
+      "answer": "010010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 700,
+      "operator_id": 21,
+      "data": 28,
+      "protected_bits": "1010111100",
+      "answer": "010111",
+      "split": "train"
+    },
+    {
+      "case_id": 701,
+      "operator_id": 21,
+      "data": 29,
+      "protected_bits": "1010111101",
+      "answer": "010110",
+      "split": "train"
+    },
+    {
+      "case_id": 702,
+      "operator_id": 21,
+      "data": 30,
+      "protected_bits": "1010111110",
+      "answer": "010100",
+      "split": "train"
+    },
+    {
+      "case_id": 703,
+      "operator_id": 21,
+      "data": 31,
+      "protected_bits": "1010111111",
+      "answer": "010101",
+      "split": "train"
+    },
+    {
+      "case_id": 704,
+      "operator_id": 22,
+      "data": 0,
+      "protected_bits": "1011000000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 705,
+      "operator_id": 22,
+      "data": 1,
+      "protected_bits": "1011000001",
+      "answer": "011111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 706,
+      "operator_id": 22,
+      "data": 2,
+      "protected_bits": "1011000010",
+      "answer": "011110",
+      "split": "train"
+    },
+    {
+      "case_id": 707,
+      "operator_id": 22,
+      "data": 3,
+      "protected_bits": "1011000011",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 708,
+      "operator_id": 22,
+      "data": 4,
+      "protected_bits": "1011000100",
+      "answer": "011100",
+      "split": "train"
+    },
+    {
+      "case_id": 709,
+      "operator_id": 22,
+      "data": 5,
+      "protected_bits": "1011000101",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 710,
+      "operator_id": 22,
+      "data": 6,
+      "protected_bits": "1011000110",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 711,
+      "operator_id": 22,
+      "data": 7,
+      "protected_bits": "1011000111",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 712,
+      "operator_id": 22,
+      "data": 8,
+      "protected_bits": "1011001000",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 713,
+      "operator_id": 22,
+      "data": 9,
+      "protected_bits": "1011001001",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 714,
+      "operator_id": 22,
+      "data": 10,
+      "protected_bits": "1011001010",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 715,
+      "operator_id": 22,
+      "data": 11,
+      "protected_bits": "1011001011",
+      "answer": "011001",
+      "split": "train"
+    },
+    {
+      "case_id": 716,
+      "operator_id": 22,
+      "data": 12,
+      "protected_bits": "1011001100",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 717,
+      "operator_id": 22,
+      "data": 13,
+      "protected_bits": "1011001101",
+      "answer": "011011",
+      "split": "train"
+    },
+    {
+      "case_id": 718,
+      "operator_id": 22,
+      "data": 14,
+      "protected_bits": "1011001110",
+      "answer": "011010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 719,
+      "operator_id": 22,
+      "data": 15,
+      "protected_bits": "1011001111",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 720,
+      "operator_id": 22,
+      "data": 16,
+      "protected_bits": "1011010000",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 721,
+      "operator_id": 22,
+      "data": 17,
+      "protected_bits": "1011010001",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 722,
+      "operator_id": 22,
+      "data": 18,
+      "protected_bits": "1011010010",
+      "answer": "001110",
+      "split": "train"
+    },
+    {
+      "case_id": 723,
+      "operator_id": 22,
+      "data": 19,
+      "protected_bits": "1011010011",
+      "answer": "010001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 724,
+      "operator_id": 22,
+      "data": 20,
+      "protected_bits": "1011010100",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 725,
+      "operator_id": 22,
+      "data": 21,
+      "protected_bits": "1011010101",
+      "answer": "010011",
+      "split": "train"
+    },
+    {
+      "case_id": 726,
+      "operator_id": 22,
+      "data": 22,
+      "protected_bits": "1011010110",
+      "answer": "010010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 727,
+      "operator_id": 22,
+      "data": 23,
+      "protected_bits": "1011010111",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 728,
+      "operator_id": 22,
+      "data": 24,
+      "protected_bits": "1011011000",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 729,
+      "operator_id": 22,
+      "data": 25,
+      "protected_bits": "1011011001",
+      "answer": "010111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 730,
+      "operator_id": 22,
+      "data": 26,
+      "protected_bits": "1011011010",
+      "answer": "010110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 731,
+      "operator_id": 22,
+      "data": 27,
+      "protected_bits": "1011011011",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 732,
+      "operator_id": 22,
+      "data": 28,
+      "protected_bits": "1011011100",
+      "answer": "010100",
+      "split": "train"
+    },
+    {
+      "case_id": 733,
+      "operator_id": 22,
+      "data": 29,
+      "protected_bits": "1011011101",
+      "answer": "001011",
+      "split": "train"
+    },
+    {
+      "case_id": 734,
+      "operator_id": 22,
+      "data": 30,
+      "protected_bits": "1011011110",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 735,
+      "operator_id": 22,
+      "data": 31,
+      "protected_bits": "1011011111",
+      "answer": "010101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 736,
+      "operator_id": 23,
+      "data": 0,
+      "protected_bits": "1011100000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 737,
+      "operator_id": 23,
+      "data": 1,
+      "protected_bits": "1011100001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 738,
+      "operator_id": 23,
+      "data": 2,
+      "protected_bits": "1011100010",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 739,
+      "operator_id": 23,
+      "data": 3,
+      "protected_bits": "1011100011",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 740,
+      "operator_id": 23,
+      "data": 4,
+      "protected_bits": "1011100100",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 741,
+      "operator_id": 23,
+      "data": 5,
+      "protected_bits": "1011100101",
+      "answer": "100000",
+      "split": "train"
+    },
+    {
+      "case_id": 742,
+      "operator_id": 23,
+      "data": 6,
+      "protected_bits": "1011100110",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 743,
+      "operator_id": 23,
+      "data": 7,
+      "protected_bits": "1011100111",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 744,
+      "operator_id": 23,
+      "data": 8,
+      "protected_bits": "1011101000",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 745,
+      "operator_id": 23,
+      "data": 9,
+      "protected_bits": "1011101001",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 746,
+      "operator_id": 23,
+      "data": 10,
+      "protected_bits": "1011101010",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 747,
+      "operator_id": 23,
+      "data": 11,
+      "protected_bits": "1011101011",
+      "answer": "100000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 748,
+      "operator_id": 23,
+      "data": 12,
+      "protected_bits": "1011101100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 749,
+      "operator_id": 23,
+      "data": 13,
+      "protected_bits": "1011101101",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 750,
+      "operator_id": 23,
+      "data": 14,
+      "protected_bits": "1011101110",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 751,
+      "operator_id": 23,
+      "data": 15,
+      "protected_bits": "1011101111",
+      "answer": "001000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 752,
+      "operator_id": 23,
+      "data": 16,
+      "protected_bits": "1011110000",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 753,
+      "operator_id": 23,
+      "data": 17,
+      "protected_bits": "1011110001",
+      "answer": "100000",
+      "split": "train"
+    },
+    {
+      "case_id": 754,
+      "operator_id": 23,
+      "data": 18,
+      "protected_bits": "1011110010",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 755,
+      "operator_id": 23,
+      "data": 19,
+      "protected_bits": "1011110011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 756,
+      "operator_id": 23,
+      "data": 20,
+      "protected_bits": "1011110100",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 757,
+      "operator_id": 23,
+      "data": 21,
+      "protected_bits": "1011110101",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 758,
+      "operator_id": 23,
+      "data": 22,
+      "protected_bits": "1011110110",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 759,
+      "operator_id": 23,
+      "data": 23,
+      "protected_bits": "1011110111",
+      "answer": "100000",
+      "split": "train"
+    },
+    {
+      "case_id": 760,
+      "operator_id": 23,
+      "data": 24,
+      "protected_bits": "1011111000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 761,
+      "operator_id": 23,
+      "data": 25,
+      "protected_bits": "1011111001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 762,
+      "operator_id": 23,
+      "data": 26,
+      "protected_bits": "1011111010",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 763,
+      "operator_id": 23,
+      "data": 27,
+      "protected_bits": "1011111011",
+      "answer": "001000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 764,
+      "operator_id": 23,
+      "data": 28,
+      "protected_bits": "1011111100",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 765,
+      "operator_id": 23,
+      "data": 29,
+      "protected_bits": "1011111101",
+      "answer": "100000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 766,
+      "operator_id": 23,
+      "data": 30,
+      "protected_bits": "1011111110",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 767,
+      "operator_id": 23,
+      "data": 31,
+      "protected_bits": "1011111111",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 768,
+      "operator_id": 24,
+      "data": 0,
+      "protected_bits": "1100000000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 769,
+      "operator_id": 24,
+      "data": 1,
+      "protected_bits": "1100000001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 770,
+      "operator_id": 24,
+      "data": 2,
+      "protected_bits": "1100000010",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 771,
+      "operator_id": 24,
+      "data": 3,
+      "protected_bits": "1100000011",
+      "answer": "001001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 772,
+      "operator_id": 24,
+      "data": 4,
+      "protected_bits": "1100000100",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 773,
+      "operator_id": 24,
+      "data": 5,
+      "protected_bits": "1100000101",
+      "answer": "011001",
+      "split": "train"
+    },
+    {
+      "case_id": 774,
+      "operator_id": 24,
+      "data": 6,
+      "protected_bits": "1100000110",
+      "answer": "100100",
+      "split": "train"
+    },
+    {
+      "case_id": 775,
+      "operator_id": 24,
+      "data": 7,
+      "protected_bits": "1100000111",
+      "answer": "110001",
+      "split": "train"
+    },
+    {
+      "case_id": 776,
+      "operator_id": 24,
+      "data": 8,
+      "protected_bits": "1100001000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 777,
+      "operator_id": 24,
+      "data": 9,
+      "protected_bits": "1100001001",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 778,
+      "operator_id": 24,
+      "data": 10,
+      "protected_bits": "1100001010",
+      "answer": "100100",
+      "split": "train"
+    },
+    {
+      "case_id": 779,
+      "operator_id": 24,
+      "data": 11,
+      "protected_bits": "1100001011",
+      "answer": "111001",
+      "split": "train"
+    },
+    {
+      "case_id": 780,
+      "operator_id": 24,
+      "data": 12,
+      "protected_bits": "1100001100",
+      "answer": "010000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 781,
+      "operator_id": 24,
+      "data": 13,
+      "protected_bits": "1100001101",
+      "answer": "101001",
+      "split": "train"
+    },
+    {
+      "case_id": 782,
+      "operator_id": 24,
+      "data": 14,
+      "protected_bits": "1100001110",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 783,
+      "operator_id": 24,
+      "data": 15,
+      "protected_bits": "1100001111",
+      "answer": "100001",
+      "split": "train"
+    },
+    {
+      "case_id": 784,
+      "operator_id": 24,
+      "data": 16,
+      "protected_bits": "1100010000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 785,
+      "operator_id": 24,
+      "data": 17,
+      "protected_bits": "1100010001",
+      "answer": "100001",
+      "split": "train"
+    },
+    {
+      "case_id": 786,
+      "operator_id": 24,
+      "data": 18,
+      "protected_bits": "1100010010",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 787,
+      "operator_id": 24,
+      "data": 19,
+      "protected_bits": "1100010011",
+      "answer": "101001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 788,
+      "operator_id": 24,
+      "data": 20,
+      "protected_bits": "1100010100",
+      "answer": "010000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 789,
+      "operator_id": 24,
+      "data": 21,
+      "protected_bits": "1100010101",
+      "answer": "111001",
+      "split": "train"
+    },
+    {
+      "case_id": 790,
+      "operator_id": 24,
+      "data": 22,
+      "protected_bits": "1100010110",
+      "answer": "100100",
+      "split": "train"
+    },
+    {
+      "case_id": 791,
+      "operator_id": 24,
+      "data": 23,
+      "protected_bits": "1100010111",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 792,
+      "operator_id": 24,
+      "data": 24,
+      "protected_bits": "1100011000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 793,
+      "operator_id": 24,
+      "data": 25,
+      "protected_bits": "1100011001",
+      "answer": "110001",
+      "split": "train"
+    },
+    {
+      "case_id": 794,
+      "operator_id": 24,
+      "data": 26,
+      "protected_bits": "1100011010",
+      "answer": "100100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 795,
+      "operator_id": 24,
+      "data": 27,
+      "protected_bits": "1100011011",
+      "answer": "011001",
+      "split": "train"
+    },
+    {
+      "case_id": 796,
+      "operator_id": 24,
+      "data": 28,
+      "protected_bits": "1100011100",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 797,
+      "operator_id": 24,
+      "data": 29,
+      "protected_bits": "1100011101",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 798,
+      "operator_id": 24,
+      "data": 30,
+      "protected_bits": "1100011110",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 799,
+      "operator_id": 24,
+      "data": 31,
+      "protected_bits": "1100011111",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 800,
+      "operator_id": 25,
+      "data": 0,
+      "protected_bits": "1100100000",
+      "answer": "000111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 801,
+      "operator_id": 25,
+      "data": 1,
+      "protected_bits": "1100100001",
+      "answer": "010100",
+      "split": "train"
+    },
+    {
+      "case_id": 802,
+      "operator_id": 25,
+      "data": 2,
+      "protected_bits": "1100100010",
+      "answer": "100001",
+      "split": "train"
+    },
+    {
+      "case_id": 803,
+      "operator_id": 25,
+      "data": 3,
+      "protected_bits": "1100100011",
+      "answer": "101110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 804,
+      "operator_id": 25,
+      "data": 4,
+      "protected_bits": "1100100100",
+      "answer": "111011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 805,
+      "operator_id": 25,
+      "data": 5,
+      "protected_bits": "1100100101",
+      "answer": "001000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 806,
+      "operator_id": 25,
+      "data": 6,
+      "protected_bits": "1100100110",
+      "answer": "010101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 807,
+      "operator_id": 25,
+      "data": 7,
+      "protected_bits": "1100100111",
+      "answer": "100010",
+      "split": "train"
+    },
+    {
+      "case_id": 808,
+      "operator_id": 25,
+      "data": 8,
+      "protected_bits": "1100101000",
+      "answer": "101111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 809,
+      "operator_id": 25,
+      "data": 9,
+      "protected_bits": "1100101001",
+      "answer": "111100",
+      "split": "train"
+    },
+    {
+      "case_id": 810,
+      "operator_id": 25,
+      "data": 10,
+      "protected_bits": "1100101010",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 811,
+      "operator_id": 25,
+      "data": 11,
+      "protected_bits": "1100101011",
+      "answer": "010110",
+      "split": "train"
+    },
+    {
+      "case_id": 812,
+      "operator_id": 25,
+      "data": 12,
+      "protected_bits": "1100101100",
+      "answer": "100011",
+      "split": "train"
+    },
+    {
+      "case_id": 813,
+      "operator_id": 25,
+      "data": 13,
+      "protected_bits": "1100101101",
+      "answer": "110000",
+      "split": "train"
+    },
+    {
+      "case_id": 814,
+      "operator_id": 25,
+      "data": 14,
+      "protected_bits": "1100101110",
+      "answer": "111101",
+      "split": "train"
+    },
+    {
+      "case_id": 815,
+      "operator_id": 25,
+      "data": 15,
+      "protected_bits": "1100101111",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 816,
+      "operator_id": 25,
+      "data": 16,
+      "protected_bits": "1100110000",
+      "answer": "010111",
+      "split": "train"
+    },
+    {
+      "case_id": 817,
+      "operator_id": 25,
+      "data": 17,
+      "protected_bits": "1100110001",
+      "answer": "100100",
+      "split": "train"
+    },
+    {
+      "case_id": 818,
+      "operator_id": 25,
+      "data": 18,
+      "protected_bits": "1100110010",
+      "answer": "110001",
+      "split": "train"
+    },
+    {
+      "case_id": 819,
+      "operator_id": 25,
+      "data": 19,
+      "protected_bits": "1100110011",
+      "answer": "111110",
+      "split": "train"
+    },
+    {
+      "case_id": 820,
+      "operator_id": 25,
+      "data": 20,
+      "protected_bits": "1100110100",
+      "answer": "001011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 821,
+      "operator_id": 25,
+      "data": 21,
+      "protected_bits": "1100110101",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 822,
+      "operator_id": 25,
+      "data": 22,
+      "protected_bits": "1100110110",
+      "answer": "100101",
+      "split": "train"
+    },
+    {
+      "case_id": 823,
+      "operator_id": 25,
+      "data": 23,
+      "protected_bits": "1100110111",
+      "answer": "110010",
+      "split": "train"
+    },
+    {
+      "case_id": 824,
+      "operator_id": 25,
+      "data": 24,
+      "protected_bits": "1100111000",
+      "answer": "111111",
+      "split": "train"
+    },
+    {
+      "case_id": 825,
+      "operator_id": 25,
+      "data": 25,
+      "protected_bits": "1100111001",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 826,
+      "operator_id": 25,
+      "data": 26,
+      "protected_bits": "1100111010",
+      "answer": "011001",
+      "split": "train"
+    },
+    {
+      "case_id": 827,
+      "operator_id": 25,
+      "data": 27,
+      "protected_bits": "1100111011",
+      "answer": "100110",
+      "split": "train"
+    },
+    {
+      "case_id": 828,
+      "operator_id": 25,
+      "data": 28,
+      "protected_bits": "1100111100",
+      "answer": "110011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 829,
+      "operator_id": 25,
+      "data": 29,
+      "protected_bits": "1100111101",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 830,
+      "operator_id": 25,
+      "data": 30,
+      "protected_bits": "1100111110",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 831,
+      "operator_id": 25,
+      "data": 31,
+      "protected_bits": "1100111111",
+      "answer": "011010",
+      "split": "train"
+    },
+    {
+      "case_id": 832,
+      "operator_id": 26,
+      "data": 0,
+      "protected_bits": "1101000000",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 833,
+      "operator_id": 26,
+      "data": 1,
+      "protected_bits": "1101000001",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 834,
+      "operator_id": 26,
+      "data": 2,
+      "protected_bits": "1101000010",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 835,
+      "operator_id": 26,
+      "data": 3,
+      "protected_bits": "1101000011",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 836,
+      "operator_id": 26,
+      "data": 4,
+      "protected_bits": "1101000100",
+      "answer": "001100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 837,
+      "operator_id": 26,
+      "data": 5,
+      "protected_bits": "1101000101",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 838,
+      "operator_id": 26,
+      "data": 6,
+      "protected_bits": "1101000110",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 839,
+      "operator_id": 26,
+      "data": 7,
+      "protected_bits": "1101000111",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 840,
+      "operator_id": 26,
+      "data": 8,
+      "protected_bits": "1101001000",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 841,
+      "operator_id": 26,
+      "data": 9,
+      "protected_bits": "1101001001",
+      "answer": "011011",
+      "split": "train"
+    },
+    {
+      "case_id": 842,
+      "operator_id": 26,
+      "data": 10,
+      "protected_bits": "1101001010",
+      "answer": "011110",
+      "split": "train"
+    },
+    {
+      "case_id": 843,
+      "operator_id": 26,
+      "data": 11,
+      "protected_bits": "1101001011",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 844,
+      "operator_id": 26,
+      "data": 12,
+      "protected_bits": "1101001100",
+      "answer": "010100",
+      "split": "train"
+    },
+    {
+      "case_id": 845,
+      "operator_id": 26,
+      "data": 13,
+      "protected_bits": "1101001101",
+      "answer": "010111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 846,
+      "operator_id": 26,
+      "data": 14,
+      "protected_bits": "1101001110",
+      "answer": "010010",
+      "split": "train"
+    },
+    {
+      "case_id": 847,
+      "operator_id": 26,
+      "data": 15,
+      "protected_bits": "1101001111",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 848,
+      "operator_id": 26,
+      "data": 16,
+      "protected_bits": "1101010000",
+      "answer": "110000",
+      "split": "train"
+    },
+    {
+      "case_id": 849,
+      "operator_id": 26,
+      "data": 17,
+      "protected_bits": "1101010001",
+      "answer": "110011",
+      "split": "train"
+    },
+    {
+      "case_id": 850,
+      "operator_id": 26,
+      "data": 18,
+      "protected_bits": "1101010010",
+      "answer": "110110",
+      "split": "train"
+    },
+    {
+      "case_id": 851,
+      "operator_id": 26,
+      "data": 19,
+      "protected_bits": "1101010011",
+      "answer": "110101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 852,
+      "operator_id": 26,
+      "data": 20,
+      "protected_bits": "1101010100",
+      "answer": "111100",
+      "split": "train"
+    },
+    {
+      "case_id": 853,
+      "operator_id": 26,
+      "data": 21,
+      "protected_bits": "1101010101",
+      "answer": "111111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 854,
+      "operator_id": 26,
+      "data": 22,
+      "protected_bits": "1101010110",
+      "answer": "111010",
+      "split": "train"
+    },
+    {
+      "case_id": 855,
+      "operator_id": 26,
+      "data": 23,
+      "protected_bits": "1101010111",
+      "answer": "111001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 856,
+      "operator_id": 26,
+      "data": 24,
+      "protected_bits": "1101011000",
+      "answer": "101000",
+      "split": "train"
+    },
+    {
+      "case_id": 857,
+      "operator_id": 26,
+      "data": 25,
+      "protected_bits": "1101011001",
+      "answer": "101011",
+      "split": "train"
+    },
+    {
+      "case_id": 858,
+      "operator_id": 26,
+      "data": 26,
+      "protected_bits": "1101011010",
+      "answer": "101110",
+      "split": "train"
+    },
+    {
+      "case_id": 859,
+      "operator_id": 26,
+      "data": 27,
+      "protected_bits": "1101011011",
+      "answer": "101101",
+      "split": "train"
+    },
+    {
+      "case_id": 860,
+      "operator_id": 26,
+      "data": 28,
+      "protected_bits": "1101011100",
+      "answer": "100100",
+      "split": "train"
+    },
+    {
+      "case_id": 861,
+      "operator_id": 26,
+      "data": 29,
+      "protected_bits": "1101011101",
+      "answer": "100111",
+      "split": "train"
+    },
+    {
+      "case_id": 862,
+      "operator_id": 26,
+      "data": 30,
+      "protected_bits": "1101011110",
+      "answer": "100010",
+      "split": "train"
+    },
+    {
+      "case_id": 863,
+      "operator_id": 26,
+      "data": 31,
+      "protected_bits": "1101011111",
+      "answer": "100001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 864,
+      "operator_id": 27,
+      "data": 0,
+      "protected_bits": "1101100000",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 865,
+      "operator_id": 27,
+      "data": 1,
+      "protected_bits": "1101100001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 866,
+      "operator_id": 27,
+      "data": 2,
+      "protected_bits": "1101100010",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 867,
+      "operator_id": 27,
+      "data": 3,
+      "protected_bits": "1101100011",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 868,
+      "operator_id": 27,
+      "data": 4,
+      "protected_bits": "1101100100",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 869,
+      "operator_id": 27,
+      "data": 5,
+      "protected_bits": "1101100101",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 870,
+      "operator_id": 27,
+      "data": 6,
+      "protected_bits": "1101100110",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 871,
+      "operator_id": 27,
+      "data": 7,
+      "protected_bits": "1101100111",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 872,
+      "operator_id": 27,
+      "data": 8,
+      "protected_bits": "1101101000",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 873,
+      "operator_id": 27,
+      "data": 9,
+      "protected_bits": "1101101001",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 874,
+      "operator_id": 27,
+      "data": 10,
+      "protected_bits": "1101101010",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 875,
+      "operator_id": 27,
+      "data": 11,
+      "protected_bits": "1101101011",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 876,
+      "operator_id": 27,
+      "data": 12,
+      "protected_bits": "1101101100",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 877,
+      "operator_id": 27,
+      "data": 13,
+      "protected_bits": "1101101101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 878,
+      "operator_id": 27,
+      "data": 14,
+      "protected_bits": "1101101110",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 879,
+      "operator_id": 27,
+      "data": 15,
+      "protected_bits": "1101101111",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 880,
+      "operator_id": 27,
+      "data": 16,
+      "protected_bits": "1101110000",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 881,
+      "operator_id": 27,
+      "data": 17,
+      "protected_bits": "1101110001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 882,
+      "operator_id": 27,
+      "data": 18,
+      "protected_bits": "1101110010",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 883,
+      "operator_id": 27,
+      "data": 19,
+      "protected_bits": "1101110011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 884,
+      "operator_id": 27,
+      "data": 20,
+      "protected_bits": "1101110100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 885,
+      "operator_id": 27,
+      "data": 21,
+      "protected_bits": "1101110101",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 886,
+      "operator_id": 27,
+      "data": 22,
+      "protected_bits": "1101110110",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 887,
+      "operator_id": 27,
+      "data": 23,
+      "protected_bits": "1101110111",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 888,
+      "operator_id": 27,
+      "data": 24,
+      "protected_bits": "1101111000",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 889,
+      "operator_id": 27,
+      "data": 25,
+      "protected_bits": "1101111001",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 890,
+      "operator_id": 27,
+      "data": 26,
+      "protected_bits": "1101111010",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 891,
+      "operator_id": 27,
+      "data": 27,
+      "protected_bits": "1101111011",
+      "answer": "000011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 892,
+      "operator_id": 27,
+      "data": 28,
+      "protected_bits": "1101111100",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 893,
+      "operator_id": 27,
+      "data": 29,
+      "protected_bits": "1101111101",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 894,
+      "operator_id": 27,
+      "data": 30,
+      "protected_bits": "1101111110",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 895,
+      "operator_id": 27,
+      "data": 31,
+      "protected_bits": "1101111111",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 896,
+      "operator_id": 28,
+      "data": 0,
+      "protected_bits": "1110000000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 897,
+      "operator_id": 28,
+      "data": 1,
+      "protected_bits": "1110000001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 898,
+      "operator_id": 28,
+      "data": 2,
+      "protected_bits": "1110000010",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 899,
+      "operator_id": 28,
+      "data": 3,
+      "protected_bits": "1110000011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 900,
+      "operator_id": 28,
+      "data": 4,
+      "protected_bits": "1110000100",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 901,
+      "operator_id": 28,
+      "data": 5,
+      "protected_bits": "1110000101",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 902,
+      "operator_id": 28,
+      "data": 6,
+      "protected_bits": "1110000110",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 903,
+      "operator_id": 28,
+      "data": 7,
+      "protected_bits": "1110000111",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 904,
+      "operator_id": 28,
+      "data": 8,
+      "protected_bits": "1110001000",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 905,
+      "operator_id": 28,
+      "data": 9,
+      "protected_bits": "1110001001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 906,
+      "operator_id": 28,
+      "data": 10,
+      "protected_bits": "1110001010",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 907,
+      "operator_id": 28,
+      "data": 11,
+      "protected_bits": "1110001011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 908,
+      "operator_id": 28,
+      "data": 12,
+      "protected_bits": "1110001100",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 909,
+      "operator_id": 28,
+      "data": 13,
+      "protected_bits": "1110001101",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 910,
+      "operator_id": 28,
+      "data": 14,
+      "protected_bits": "1110001110",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 911,
+      "operator_id": 28,
+      "data": 15,
+      "protected_bits": "1110001111",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 912,
+      "operator_id": 28,
+      "data": 16,
+      "protected_bits": "1110010000",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 913,
+      "operator_id": 28,
+      "data": 17,
+      "protected_bits": "1110010001",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 914,
+      "operator_id": 28,
+      "data": 18,
+      "protected_bits": "1110010010",
+      "answer": "000001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 915,
+      "operator_id": 28,
+      "data": 19,
+      "protected_bits": "1110010011",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 916,
+      "operator_id": 28,
+      "data": 20,
+      "protected_bits": "1110010100",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 917,
+      "operator_id": 28,
+      "data": 21,
+      "protected_bits": "1110010101",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 918,
+      "operator_id": 28,
+      "data": 22,
+      "protected_bits": "1110010110",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 919,
+      "operator_id": 28,
+      "data": 23,
+      "protected_bits": "1110010111",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 920,
+      "operator_id": 28,
+      "data": 24,
+      "protected_bits": "1110011000",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 921,
+      "operator_id": 28,
+      "data": 25,
+      "protected_bits": "1110011001",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 922,
+      "operator_id": 28,
+      "data": 26,
+      "protected_bits": "1110011010",
+      "answer": "000010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 923,
+      "operator_id": 28,
+      "data": 27,
+      "protected_bits": "1110011011",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 924,
+      "operator_id": 28,
+      "data": 28,
+      "protected_bits": "1110011100",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 925,
+      "operator_id": 28,
+      "data": 29,
+      "protected_bits": "1110011101",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 926,
+      "operator_id": 28,
+      "data": 30,
+      "protected_bits": "1110011110",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 927,
+      "operator_id": 28,
+      "data": 31,
+      "protected_bits": "1110011111",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 928,
+      "operator_id": 29,
+      "data": 0,
+      "protected_bits": "1110100000",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 929,
+      "operator_id": 29,
+      "data": 1,
+      "protected_bits": "1110100001",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 930,
+      "operator_id": 29,
+      "data": 2,
+      "protected_bits": "1110100010",
+      "answer": "011011",
+      "split": "train"
+    },
+    {
+      "case_id": 931,
+      "operator_id": 29,
+      "data": 3,
+      "protected_bits": "1110100011",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 932,
+      "operator_id": 29,
+      "data": 4,
+      "protected_bits": "1110100100",
+      "answer": "101100",
+      "split": "train"
+    },
+    {
+      "case_id": 933,
+      "operator_id": 29,
+      "data": 5,
+      "protected_bits": "1110100101",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 934,
+      "operator_id": 29,
+      "data": 6,
+      "protected_bits": "1110100110",
+      "answer": "110011",
+      "split": "train"
+    },
+    {
+      "case_id": 935,
+      "operator_id": 29,
+      "data": 7,
+      "protected_bits": "1110100111",
+      "answer": "010000",
+      "split": "train"
+    },
+    {
+      "case_id": 936,
+      "operator_id": 29,
+      "data": 8,
+      "protected_bits": "1110101000",
+      "answer": "110100",
+      "split": "train"
+    },
+    {
+      "case_id": 937,
+      "operator_id": 29,
+      "data": 9,
+      "protected_bits": "1110101001",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 938,
+      "operator_id": 29,
+      "data": 10,
+      "protected_bits": "1110101010",
+      "answer": "010011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 939,
+      "operator_id": 29,
+      "data": 11,
+      "protected_bits": "1110101011",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 940,
+      "operator_id": 29,
+      "data": 12,
+      "protected_bits": "1110101100",
+      "answer": "000000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 941,
+      "operator_id": 29,
+      "data": 13,
+      "protected_bits": "1110101101",
+      "answer": "101111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 942,
+      "operator_id": 29,
+      "data": 14,
+      "protected_bits": "1110101110",
+      "answer": "101010",
+      "split": "train"
+    },
+    {
+      "case_id": 943,
+      "operator_id": 29,
+      "data": 15,
+      "protected_bits": "1110101111",
+      "answer": "011101",
+      "split": "train"
+    },
+    {
+      "case_id": 944,
+      "operator_id": 29,
+      "data": 16,
+      "protected_bits": "1110110000",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 945,
+      "operator_id": 29,
+      "data": 17,
+      "protected_bits": "1110110001",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 946,
+      "operator_id": 29,
+      "data": 18,
+      "protected_bits": "1110110010",
+      "answer": "011100",
+      "split": "train"
+    },
+    {
+      "case_id": 947,
+      "operator_id": 29,
+      "data": 19,
+      "protected_bits": "1110110011",
+      "answer": "010110",
+      "split": "heldout"
+    },
+    {
+      "case_id": 948,
+      "operator_id": 29,
+      "data": 20,
+      "protected_bits": "1110110100",
+      "answer": "100110",
+      "split": "train"
+    },
+    {
+      "case_id": 949,
+      "operator_id": 29,
+      "data": 21,
+      "protected_bits": "1110110101",
+      "answer": "110010",
+      "split": "train"
+    },
+    {
+      "case_id": 950,
+      "operator_id": 29,
+      "data": 22,
+      "protected_bits": "1110110110",
+      "answer": "101110",
+      "split": "train"
+    },
+    {
+      "case_id": 951,
+      "operator_id": 29,
+      "data": 23,
+      "protected_bits": "1110110111",
+      "answer": "000100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 952,
+      "operator_id": 29,
+      "data": 24,
+      "protected_bits": "1110111000",
+      "answer": "010100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 953,
+      "operator_id": 29,
+      "data": 25,
+      "protected_bits": "1110111001",
+      "answer": "010001",
+      "split": "train"
+    },
+    {
+      "case_id": 954,
+      "operator_id": 29,
+      "data": 26,
+      "protected_bits": "1110111010",
+      "answer": "111110",
+      "split": "train"
+    },
+    {
+      "case_id": 955,
+      "operator_id": 29,
+      "data": 27,
+      "protected_bits": "1110111011",
+      "answer": "101111",
+      "split": "train"
+    },
+    {
+      "case_id": 956,
+      "operator_id": 29,
+      "data": 28,
+      "protected_bits": "1110111100",
+      "answer": "101010",
+      "split": "train"
+    },
+    {
+      "case_id": 957,
+      "operator_id": 29,
+      "data": 29,
+      "protected_bits": "1110111101",
+      "answer": "111111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 958,
+      "operator_id": 29,
+      "data": 30,
+      "protected_bits": "1110111110",
+      "answer": "101100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 959,
+      "operator_id": 29,
+      "data": 31,
+      "protected_bits": "1110111111",
+      "answer": "101000",
+      "split": "train"
+    },
+    {
+      "case_id": 960,
+      "operator_id": 30,
+      "data": 0,
+      "protected_bits": "1111000000",
+      "answer": "111011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 961,
+      "operator_id": 30,
+      "data": 1,
+      "protected_bits": "1111000001",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 962,
+      "operator_id": 30,
+      "data": 2,
+      "protected_bits": "1111000010",
+      "answer": "010010",
+      "split": "train"
+    },
+    {
+      "case_id": 963,
+      "operator_id": 30,
+      "data": 3,
+      "protected_bits": "1111000011",
+      "answer": "111011",
+      "split": "train"
+    },
+    {
+      "case_id": 964,
+      "operator_id": 30,
+      "data": 4,
+      "protected_bits": "1111000100",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 965,
+      "operator_id": 30,
+      "data": 5,
+      "protected_bits": "1111000101",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 966,
+      "operator_id": 30,
+      "data": 6,
+      "protected_bits": "1111000110",
+      "answer": "110000",
+      "split": "train"
+    },
+    {
+      "case_id": 967,
+      "operator_id": 30,
+      "data": 7,
+      "protected_bits": "1111000111",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 968,
+      "operator_id": 30,
+      "data": 8,
+      "protected_bits": "1111001000",
+      "answer": "111110",
+      "split": "train"
+    },
+    {
+      "case_id": 969,
+      "operator_id": 30,
+      "data": 9,
+      "protected_bits": "1111001001",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 970,
+      "operator_id": 30,
+      "data": 10,
+      "protected_bits": "1111001010",
+      "answer": "011100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 971,
+      "operator_id": 30,
+      "data": 11,
+      "protected_bits": "1111001011",
+      "answer": "110111",
+      "split": "train"
+    },
+    {
+      "case_id": 972,
+      "operator_id": 30,
+      "data": 12,
+      "protected_bits": "1111001100",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 973,
+      "operator_id": 30,
+      "data": 13,
+      "protected_bits": "1111001101",
+      "answer": "110001",
+      "split": "train"
+    },
+    {
+      "case_id": 974,
+      "operator_id": 30,
+      "data": 14,
+      "protected_bits": "1111001110",
+      "answer": "101111",
+      "split": "train"
+    },
+    {
+      "case_id": 975,
+      "operator_id": 30,
+      "data": 15,
+      "protected_bits": "1111001111",
+      "answer": "100110",
+      "split": "train"
+    },
+    {
+      "case_id": 976,
+      "operator_id": 30,
+      "data": 16,
+      "protected_bits": "1111010000",
+      "answer": "110011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 977,
+      "operator_id": 30,
+      "data": 17,
+      "protected_bits": "1111010001",
+      "answer": "010011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 978,
+      "operator_id": 30,
+      "data": 18,
+      "protected_bits": "1111010010",
+      "answer": "011000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 979,
+      "operator_id": 30,
+      "data": 19,
+      "protected_bits": "1111010011",
+      "answer": "101011",
+      "split": "heldout"
+    },
+    {
+      "case_id": 980,
+      "operator_id": 30,
+      "data": 20,
+      "protected_bits": "1111010100",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 981,
+      "operator_id": 30,
+      "data": 21,
+      "protected_bits": "1111010101",
+      "answer": "001100",
+      "split": "train"
+    },
+    {
+      "case_id": 982,
+      "operator_id": 30,
+      "data": 22,
+      "protected_bits": "1111010110",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 983,
+      "operator_id": 30,
+      "data": 23,
+      "protected_bits": "1111010111",
+      "answer": "011100",
+      "split": "train"
+    },
+    {
+      "case_id": 984,
+      "operator_id": 30,
+      "data": 24,
+      "protected_bits": "1111011000",
+      "answer": "010101",
+      "split": "train"
+    },
+    {
+      "case_id": 985,
+      "operator_id": 30,
+      "data": 25,
+      "protected_bits": "1111011001",
+      "answer": "101101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 986,
+      "operator_id": 30,
+      "data": 26,
+      "protected_bits": "1111011010",
+      "answer": "100000",
+      "split": "train"
+    },
+    {
+      "case_id": 987,
+      "operator_id": 30,
+      "data": 27,
+      "protected_bits": "1111011011",
+      "answer": "101010",
+      "split": "train"
+    },
+    {
+      "case_id": 988,
+      "operator_id": 30,
+      "data": 28,
+      "protected_bits": "1111011100",
+      "answer": "011000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 989,
+      "operator_id": 30,
+      "data": 29,
+      "protected_bits": "1111011101",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 990,
+      "operator_id": 30,
+      "data": 30,
+      "protected_bits": "1111011110",
+      "answer": "110010",
+      "split": "train"
+    },
+    {
+      "case_id": 991,
+      "operator_id": 30,
+      "data": 31,
+      "protected_bits": "1111011111",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 992,
+      "operator_id": 31,
+      "data": 0,
+      "protected_bits": "1111100000",
+      "answer": "000000",
+      "split": "train"
+    },
+    {
+      "case_id": 993,
+      "operator_id": 31,
+      "data": 1,
+      "protected_bits": "1111100001",
+      "answer": "001000",
+      "split": "train"
+    },
+    {
+      "case_id": 994,
+      "operator_id": 31,
+      "data": 2,
+      "protected_bits": "1111100010",
+      "answer": "000010",
+      "split": "train"
+    },
+    {
+      "case_id": 995,
+      "operator_id": 31,
+      "data": 3,
+      "protected_bits": "1111100011",
+      "answer": "001010",
+      "split": "train"
+    },
+    {
+      "case_id": 996,
+      "operator_id": 31,
+      "data": 4,
+      "protected_bits": "1111100100",
+      "answer": "010000",
+      "split": "heldout"
+    },
+    {
+      "case_id": 997,
+      "operator_id": 31,
+      "data": 5,
+      "protected_bits": "1111100101",
+      "answer": "011000",
+      "split": "train"
+    },
+    {
+      "case_id": 998,
+      "operator_id": 31,
+      "data": 6,
+      "protected_bits": "1111100110",
+      "answer": "010010",
+      "split": "heldout"
+    },
+    {
+      "case_id": 999,
+      "operator_id": 31,
+      "data": 7,
+      "protected_bits": "1111100111",
+      "answer": "011010",
+      "split": "train"
+    },
+    {
+      "case_id": 1000,
+      "operator_id": 31,
+      "data": 8,
+      "protected_bits": "1111101000",
+      "answer": "000001",
+      "split": "train"
+    },
+    {
+      "case_id": 1001,
+      "operator_id": 31,
+      "data": 9,
+      "protected_bits": "1111101001",
+      "answer": "001001",
+      "split": "train"
+    },
+    {
+      "case_id": 1002,
+      "operator_id": 31,
+      "data": 10,
+      "protected_bits": "1111101010",
+      "answer": "000011",
+      "split": "train"
+    },
+    {
+      "case_id": 1003,
+      "operator_id": 31,
+      "data": 11,
+      "protected_bits": "1111101011",
+      "answer": "001011",
+      "split": "train"
+    },
+    {
+      "case_id": 1004,
+      "operator_id": 31,
+      "data": 12,
+      "protected_bits": "1111101100",
+      "answer": "010001",
+      "split": "heldout"
+    },
+    {
+      "case_id": 1005,
+      "operator_id": 31,
+      "data": 13,
+      "protected_bits": "1111101101",
+      "answer": "011001",
+      "split": "train"
+    },
+    {
+      "case_id": 1006,
+      "operator_id": 31,
+      "data": 14,
+      "protected_bits": "1111101110",
+      "answer": "010011",
+      "split": "train"
+    },
+    {
+      "case_id": 1007,
+      "operator_id": 31,
+      "data": 15,
+      "protected_bits": "1111101111",
+      "answer": "011011",
+      "split": "train"
+    },
+    {
+      "case_id": 1008,
+      "operator_id": 31,
+      "data": 16,
+      "protected_bits": "1111110000",
+      "answer": "000100",
+      "split": "train"
+    },
+    {
+      "case_id": 1009,
+      "operator_id": 31,
+      "data": 17,
+      "protected_bits": "1111110001",
+      "answer": "001100",
+      "split": "heldout"
+    },
+    {
+      "case_id": 1010,
+      "operator_id": 31,
+      "data": 18,
+      "protected_bits": "1111110010",
+      "answer": "000110",
+      "split": "train"
+    },
+    {
+      "case_id": 1011,
+      "operator_id": 31,
+      "data": 19,
+      "protected_bits": "1111110011",
+      "answer": "001110",
+      "split": "train"
+    },
+    {
+      "case_id": 1012,
+      "operator_id": 31,
+      "data": 20,
+      "protected_bits": "1111110100",
+      "answer": "010100",
+      "split": "train"
+    },
+    {
+      "case_id": 1013,
+      "operator_id": 31,
+      "data": 21,
+      "protected_bits": "1111110101",
+      "answer": "011100",
+      "split": "train"
+    },
+    {
+      "case_id": 1014,
+      "operator_id": 31,
+      "data": 22,
+      "protected_bits": "1111110110",
+      "answer": "010110",
+      "split": "train"
+    },
+    {
+      "case_id": 1015,
+      "operator_id": 31,
+      "data": 23,
+      "protected_bits": "1111110111",
+      "answer": "011110",
+      "split": "train"
+    },
+    {
+      "case_id": 1016,
+      "operator_id": 31,
+      "data": 24,
+      "protected_bits": "1111111000",
+      "answer": "000101",
+      "split": "train"
+    },
+    {
+      "case_id": 1017,
+      "operator_id": 31,
+      "data": 25,
+      "protected_bits": "1111111001",
+      "answer": "001101",
+      "split": "train"
+    },
+    {
+      "case_id": 1018,
+      "operator_id": 31,
+      "data": 26,
+      "protected_bits": "1111111010",
+      "answer": "000111",
+      "split": "train"
+    },
+    {
+      "case_id": 1019,
+      "operator_id": 31,
+      "data": 27,
+      "protected_bits": "1111111011",
+      "answer": "001111",
+      "split": "train"
+    },
+    {
+      "case_id": 1020,
+      "operator_id": 31,
+      "data": 28,
+      "protected_bits": "1111111100",
+      "answer": "010101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 1021,
+      "operator_id": 31,
+      "data": 29,
+      "protected_bits": "1111111101",
+      "answer": "011101",
+      "split": "heldout"
+    },
+    {
+      "case_id": 1022,
+      "operator_id": 31,
+      "data": 30,
+      "protected_bits": "1111111110",
+      "answer": "010111",
+      "split": "heldout"
+    },
+    {
+      "case_id": 1023,
+      "operator_id": 31,
+      "data": 31,
+      "protected_bits": "1111111111",
+      "answer": "011111",
+      "split": "heldout"
+    }
+  ]
+}
